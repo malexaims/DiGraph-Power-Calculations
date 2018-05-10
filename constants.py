@@ -29,18 +29,28 @@ conductorData = conductorData.applymap(dropKM)
 conductorDataCopper = conductorData.drop(conductorData.columns[6:], axis=1)
 conductorDataAlum = conductorData.drop(conductorData.columns[3:6], axis=1)
 
+"""
+AWG = AWG (up to 4/0) or kcmil (250 - 400) of wire
+xL NF = Wire reactance in PVC and aluminum conduit per 1000 ft in ohms
+xL F = Wire reactance in steel conduit per 1000 ft  in ohms
+xR PVC = Wire resistance in PVC conduit per 1000 ft in ohms
+xR Alum = Wire resistance in aluminum conduit per 1000 ft in ohms
+xR Steel = Wire resistance in steel conduit per 1000 ft in ohms
+"""
 columnNames = ["AWG", "xL NF", "xL F", "xR PVC", "xR Alum", "xR Steel"]
 
 conductorDataCopper.columns = columnNames
 conductorDataAlum.columns = columnNames
 
 conductorDataCopper = conductorDataCopper.set_index(["AWG"])
+conductorDataCopper.index = conductorDataCopper.index.map(str)
 conductorDataAlum = conductorDataAlum.set_index(["AWG"])
+conductorDataAlum.index = conductorDataAlum.index.map(str)
 
 
 """Example of how to access conductor data from DataFrame created above"""
-#wireSize = 14
-#print conductorDataCopper["xL NF"].get(wireSize)
+# wireSize = 4
+# print conductorDataCopper["xR PVC"].get(wireSize)
 
 ##########################################################################################################
 """Other"""
@@ -58,6 +68,9 @@ voltageCompatDict = {
 "30": [30, 15],
 "24": [24, 12]}
 
+compatWireSizes = ['14', '12', '10', '8', '6', '4', '3', '2', '1', '1/0', '2/0', '3/0', '4/0', '250', '300', '350', '400']
+compatWireMaterial = ['copper', 'aluminum']
+compatConduitMaterial = ['HDPE', 'PVC', "aluminum", "steel"]
+
 VABASE = 1000.0
 VARBASE = 1000.0
-
