@@ -23,7 +23,7 @@ def draw_graph_labels(graph):
                            width=1.0,
                            arrowsize=25)
 
-    edgeILabels = {(beg,end):'I: {0.real:.2f} A'.format(data["I"]) for beg,end,data in graph.edges(data=True)}
+    edgeILabels = {(beg,end):'I: {0:.2f} A'.format(data["I"]) for beg,end,data in graph.edges(data=True)}
 
     nodeVLabels = {}
     for i in graph.nodes():
