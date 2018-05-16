@@ -22,26 +22,26 @@ import matplotlib.pyplot as plt
 
 G = RadialPowerSystem()
 
-G.add_node("service", nomVoltage=480, phase=1, nodeType="service")
+G.add_node("service_xfmr", nodeType="service", nomVoltage=480, phase=1, sscXfmrSec=50000.0)
 G.add_node("tap1", phase=1, nodeType="bus", nomVoltage=240)
-G.add_node("load1", nomVoltage=240, phase=1, w=10000.0, vAr=1.0, nodeType="load")
-G.add_node("load2", nomVoltage=120, phase=1, w=1000.0, vAr=1.0, nodeType="load")
-G.add_node("load3", nomVoltage=120, phase=1, w=500.0, vAr=1.0, nodeType="load")
+G.add_node("load1", nomVoltage=240, phase=1, w=10000.0, vAr=0.0, nodeType="load")
+G.add_node("load2", nomVoltage=120, phase=1, w=1000.0, vAr=0.0, nodeType="load")
+G.add_node("load3", nomVoltage=120, phase=1, w=500.0, vAr=0.0, nodeType="load")
 G.add_node("tap2", phase=1, nodeType="bus", nomVoltage=120)
-G.add_node("load4", nomVoltage=120, phase=1, w=1000.0, vAr=500.0, nodeType="load")
+G.add_node("load4", nomVoltage=120, phase=1, w=1000.0, vAr=0.0, nodeType="load")
 G.add_node("load5", nomVoltage=120, phase=1, w=1000.0, vAr=0.0, nodeType="load")
 
-G.add_node("xfmr1", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.0, rating=50.0,
+G.add_node("xfmr1", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.10, rating=50.0,
            nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
            nodeType="transformer")
 
-G.add_connection("service", "xfmr1", wireSize=1, conduitMat="PVC", length=1000.0)
-G.add_connection("xfmr1", "tap1", wireSize=4, conduitMat="PVC", length=2000.0)
-G.add_connection("tap1", "load1", wireSize=4, conduitMat="PVC", length=2000.0)
-G.add_connection("tap1", "load2", wireSize=4, conduitMat="PVC", length=2000.0)
-G.add_connection("tap1", "load3", wireSize=4, conduitMat="PVC", length=2000.0)
-G.add_connection("tap1", "tap2", wireSize=4, conduitMat="PVC", length=2000.0)
-G.add_connection("tap2", "load4", wireSize=4, conduitMat="PVC", length=2000.0)
+G.add_connection("service_xfmr", "xfmr1", wireSize=6, conduitMat="PVC", length=500.0)
+G.add_connection("xfmr1", "tap1", wireSize=4, conduitMat="PVC", length=200.0)
+G.add_connection("tap1", "load1", wireSize=4, conduitMat="PVC", length=200.0)
+G.add_connection("tap1", "load2", wireSize=4, conduitMat="PVC", length=200.0)
+G.add_connection("tap1", "load3", wireSize=4, conduitMat="PVC", length=200.0)
+G.add_connection("tap1", "tap2", wireSize=4, conduitMat="PVC", length=200.0)
+G.add_connection("tap2", "load4", wireSize=4, conduitMat="PVC", length=200.0)
 G.add_connection("tap2", "load5", wireSize=4, conduitMat="PVC", length=2000.0)
 
 #########################################################################################
@@ -70,7 +70,8 @@ if __name__ == "__main__":
     calc_flows_PU(graphToCheck)
     calc_voltages_PU(graphToCheck)
     actual_conv(graphToCheck)
-    print graphToCheck.edges(data=True)
+    calc_sym_ssc_PU(graphToCheck)
+    # print graphToCheck.edges(data=True)
     # print graphToCheck.nodes(data=True)
     if plot:
         draw_graph_labels(graphToCheck)

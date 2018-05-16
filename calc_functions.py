@@ -40,7 +40,7 @@ def per_unit_conv(graph):
     sBase = complex(wBase, vArBase)
     #Set the voltage bases for each edge. Node bases will come from nominal voltage settings.
     for beg,end,data in graph.edges(data=True):
-        if graph.node[beg]["nodeType"] == "service":
+        if graph.in_degree(beg) == 0:
             data["vBase"] = graph.node[beg]["nomVoltage"]
         if graph.node[end]["nodeType"] == "transformer":
             data["vBase"] = graph.node[end]["nomPrimaryV"]
@@ -72,11 +72,11 @@ def per_unit_conv(graph):
         #For transformers
         if graph.node[i]["nodeType"] == "transformer":
 
-            zPU = complex(graph.node[i]["pctR"],graph.node[i]["pctX"]) * (sBase / (graph.node[i]["rating"]*1000.0)) * \
+            zPU = (complex(graph.node[i]["pctR"],graph.node[i]["pctX"]) * (sBase / (graph.node[i]["rating"]*1000.0)) * \
                   ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"])) / \
-                  graph.node[i]["nomPrimaryV"])**2.0
+                  graph.node[i]["nomPrimaryV"])**2.0)
 
-            graph.node[i]["zPU"] = zPU
+            graph.node[i]["zPU"] = complex(-zPU.real,zPU.imag)
     #For edges
     for beg,end,data in graph.edges(data=True):
         data["zPU"] = complex(((data["rL"] * data["length"])/1000.0), ((data["xL"] * data["length"])/1000.0)) / data["zBase"]
@@ -134,8 +134,7 @@ def calc_flows_PU(graph, debug=False):
         if len(vArFlowsDict[k].values()) == 0:
             pass
         for k1,v1 in vArFlowsDict[k].items():
-            #Must be opposite of the load vAr
-            graph[k][k1]["vArPU"] = -v1 #TODO: Not sure why this needs to be negative here... need to figure out
+            graph[k][k1]["vArPU"] = v1
     if debug:
         print wPUTotal
         print vArPUTotal
@@ -175,9 +174,11 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
     vArPU = edge["vArPU"]
     zPU = edge["zPU"]
     phaseEnd = graph.node[endNode]["phase"]
-    if graph.node[sourceNode]["nodeType"] == "transformer":
+    if graph.node[sourceNode]["nodeType"] == "transformer" and graph.node[endNode]["nodeType"] == "transformer":
+        vSPU = graph.node[sourceNode]["nomSecondaryV2"] / graph.node[endNode]["nomPrimaryV"]#TODO: Fix for transformers with one voltage secondary
+    elif graph.node[sourceNode]["nodeType"] == "transformer":
         vSPU = graph.node[sourceNode]["nomSecondaryV2"] / graph.node[endNode]["nomVoltage"] #TODO: Fix for transformers with one voltage secondary
-    if graph.node[endNode]["nodeType"] == "transformer":
+    elif graph.node[endNode]["nodeType"] == "transformer":
         vSPU = graph.node[sourceNode]["nomVoltage"] / graph.node[endNode]["nomPrimaryV"]
     else:
         vSPU = 1
@@ -186,9 +187,10 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
     edge["IPU"] = IPU
     #Calculate round-trip voltage drop along edge
     if phaseEnd == 1:
-        vDropPU = IPU * zPU * 2.0
+        #Reactance must be negative for voltage drop to work correctly
+        vDropPU = complex(IPU.real,-IPU.imag) * zPU * 2.0
     elif phaseEnd == 3:
-        vDropPU = math.sqrt(3) * IPU * zPU
+        vDropPU = math.sqrt(3) * complex(IPU.real,-IPU.imag) * zPU
     else:
         raise ValueError("Phase value for edge must be 1 or 3")
     assert vDropPU.real < 1.0, "Segment voltge drop exceeds starting voltage. Check network configuration."
@@ -197,8 +199,8 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
     if graph.node[endNode]["nodeType"] == "transformer":
         if graph.node[sourceNode]["nodeType"] == "transformer":
             graph.node[endNode]["primaryVoltagePU"] = graph.node[sourceNode]["secondaryVoltagePU"] - vDropPU
-            return
-        graph.node[endNode]["primaryVoltagePU"] = graph.node[sourceNode]["trueVoltagePU"] - vDropPU
+        else:
+            graph.node[endNode]["primaryVoltagePU"] = graph.node[sourceNode]["trueVoltagePU"] - vDropPU
         #Set transformer secondary voltage
         successors = [i for i in graph.successors(endNode)]
         if len(successors) > 1:
@@ -237,9 +239,76 @@ def calc_voltages_PU(graph):
         segment_vdrop_PU(graph, i[0], i[1])
 
 
-def calc_max_ssc_PU(graph):
-    """Calculates the maximum short circuit current at each node on the network, starting from the "service" node
+def calc_sym_ssc_PU(graph):
+    """Calculates the maximum symmetrical short circuit current at each node on the network, starting from the "service" node
     then running down the digraph edges out to the load nodes. The series impedance from the "service" node
     to each other node on the network is used to calculate the short circuit current available. Determines and sets
-    three-phase faults for three-phase nodes, and single line to ground faults and line to line faults for single phase nodes.
+    three-phase faults for three-phase nodes, and single line to ground faults and line to line faults for single phase nodes. Only
+    function for symmetrical faults in three phase and single phase systems. Requires that the short circuit current avaliable is provided
+    for the secondary terminals of the service transformer.
     """
+    wBase, vArBase = WBASE, VARBASE
+    sBase = complex(wBase, vArBase)
+    serviceNode = None
+
+    for i in graph.nodes():
+        if graph.in_degree(i) == 0:
+            serviceNode = i
+            break
+
+    try:
+        zBase = (graph.node[serviceNode]["nomVoltage"].real**2.0) / math.sqrt(wBase**2+vArBase**2)
+        sourceZPU = (graph.node[serviceNode]["nomVoltage"] / graph.node[serviceNode]["sscXfmrSec"]) #Only works when ssc available is provided for the service xfmr secondary
+    except KeyError:
+        print ("""Missing input data for service node. Unable to perform short circuit current calculations.
+                  Avaliable short circuit current on secondary of service transformer required.""")
+
+    for i in graph.nodes():
+        #Move on from service node
+        if graph.in_degree(i) == 0:
+            continue
+        length, path = nx.bidirectional_dijkstra(graph, serviceNode, i)
+        #TODO: Implement way to start with a starting SSC that sets a upstream system impedance
+        zSeriesPU = sourceZPU #Start with service impedance from source
+        #Sum series edge impedances between service point and node
+        for j in range(len(path)-1):
+            try:
+                zSeriesPU += graph[path[j]][path[j+1]]["zPU"]
+            except KeyError:
+                print "zPU not set for edge between {0} and {1}".format(path[j], path[j+1])
+        #If transformer is on the path add that to the series Impedance
+        for y in path:
+            if graph.node[y]["nodeType"] == "transformer":
+                try:
+                    zSeriesPU += graph.node[y]["zPU"]
+                except KeyError:
+                    print "zPU not set for transformer {0}".format(y)
+        #If transformer is the node where zSeriesPU is being set, dont include that transformers impedance (ssc at primary)
+        if graph.node[i]["nodeType"] == "transformer":
+                graph.node[i]["zSeriesPU"] = zSeriesPU - graph.node[i]["zPU"]
+                continue
+        graph.node[i]["zSeriesPU"] = zSeriesPU
+
+    for i in graph.nodes():
+        if graph.in_degree(i) == 0:
+            serviceNode = i
+            continue
+        if graph.node[i]["phase"] == 1:
+            try:
+                if graph.node[i]["nodeType"] == "transformer":
+                    graph.node[i]["SymSSC"] =  complex(((1.0/graph.node[i]["zSeriesPU"].real) * graph.node[i]["nomPrimaryV"].real),
+                                                       ((1.0/graph.node[i]["zSeriesPU"].imag) * graph.node[i]["nomPrimaryV"].imag))
+                else:
+                    graph.node[i]["SymSSC"] =  complex(((1.0/graph.node[i]["zSeriesPU"].real) * graph.node[i]["nomVoltage"].real),
+                                                       ((1.0/graph.node[i]["zSeriesPU"].imag) * graph.node[i]["nomVoltage"].imag))
+            except KeyError:
+                print "Missing series per unit impedance for node {0}".format(i)
+        #TODO: Implement SSC for three phase systems
+        # if graph.node[i]["phase"] == 3:
+        #     try:
+        #         if graph.node[i]["nodeType"] == "transformer":
+        #             graph.node[i]["SymSSC"] = (3*graph.node[i]["nomPrimaryV"]**2/math.sqrt(3) / -graph.node[i]["zSeriesPU"]) / sBase #TODO: Fix voltage determination for LN
+        #         else:
+        #             graph.node[i]["SymSSC"] = (3*graph.node[i]["nomVoltage"]**2/math.sqrt(3) / -graph.node[i]["zSeriesPU"]) / sBase #TODO: Fix voltage determination for LN
+        #     except KeyError:
+        #         print "Missing series per unit impedance for node {0}".format(i)

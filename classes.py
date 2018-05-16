@@ -85,10 +85,6 @@ class RadialPowerSystem(DiGraph):
 
         #Get the reactance and resistance of the wire based on wire and conduit material entered
         xL = wireDataDict[reactDict].get(wireSize)
-        print "xL", xL
         rL = wireDataDict[resistDict].get(wireSize)
-        print "rL", rL
-        print "length ", length
-
         #Create a edge with appropriate attributes
         self.add_edge(begNode, endNode, xL=xL, rL=rL, length=length)

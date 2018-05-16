@@ -11,8 +11,9 @@ import matplotlib.pyplot as plt
 def draw_graph_labels(graph):
     """Plots a graph visualization with various edge and node labels.
     """
-    pos = nx.circular_layout(graph)
+    pos = nx.shell_layout(graph)
     pos1 = {k:[v[0],v[1]-0.15] for k,v in pos.items()}
+    pos2 = {k:[v[0],v[1]-0.30] for k,v in pos.items()}
 
     nx.draw_networkx_nodes(graph, pos,
                            node_color='r',
@@ -36,8 +37,17 @@ def draw_graph_labels(graph):
             print "!"
             pass
 
+    nodeSSCLabels = {}
+    for i in graph.nodes():
+        try:
+            nodeSSCLabels[i] = '{0.real:.1f} I_Sym_SSC'.format(graph.node[i]["SymSSC"])
+        except KeyError:
+            print "!"
+            pass
+
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edgeILabels, font_size=12)
     nx.draw_networkx_labels(graph, pos1, nodeVLabels, font_size=12)
+    nx.draw_networkx_labels(graph, pos2, nodeSSCLabels, font_size=12)
     nx.draw_networkx_labels(graph, pos, font_size=12)
 
     plt.axis('off')
