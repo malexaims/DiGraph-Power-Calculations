@@ -4,6 +4,9 @@ Created on Sat Aug 19 07:56:31 2017
 
 @author: AtotheM
 """
+import sys
+sys.path.insert(0, 'Z:/2018 Projects/11181 (I-75 ITS fm SR 50 to Sumter County_Wantman)/Caclulations/DiGraph-Power-Calculations')
+
 from calc_functions import *
 from checker_functions import over_voltage_check
 from plotting import *
@@ -22,44 +25,60 @@ import matplotlib.pyplot as plt
 
 G = RadialPowerSystem()
 
-G.add_node("service_xfmr", nodeType="service", nomVoltage=480, phase=1, sscXfmrSec=50000.0)
-G.add_node("tap1", phase=1, nodeType="bus", nomVoltage=240)
-G.add_node("load1", nomVoltage=240, phase=1, w=10000.0, vAr=0.0, nodeType="load")
-G.add_node("load2", nomVoltage=120, phase=1, w=1000.0, vAr=0.0, nodeType="load")
-G.add_node("load3", nomVoltage=120, phase=1, w=500.0, vAr=0.0, nodeType="load")
-G.add_node("tap2", phase=1, nodeType="bus", nomVoltage=120)
-G.add_node("load4", nomVoltage=120, phase=1, w=1000.0, vAr=0.0, nodeType="load")
-G.add_node("load5", nomVoltage=120, phase=1, w=1000.0, vAr=0.0, nodeType="load")
+G.add_node("service_xfmr", nodeType="service", nomVoltage=480, phase=1, sscXfmrSec=75000.0)
+G.add_node("DS5", phase=1, nodeType="bus", nomVoltage=480)
+G.add_connection("service_xfmr", "DS5", wireSize="3/0", conduitMat="PVC", length=25.0)
 
-G.add_node("xfmr1", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.10, rating=50.0,
+G.add_node("PB1", phase=1, nodeType="bus", nomVoltage=480)
+G.add_node("DS1_A", phase=1, nodeType="bus", nomVoltage=480)
+G.add_node("XFMR1", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.0, rating=7.5,
            nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
            nodeType="transformer")
+G.add_node("PNL_A", phase=1, nodeType="bus", nomVoltage=240)
+G.add_node("CCTV_1", nomVoltage=240, phase=1, w=721.0, vAr=0.0, nodeType="load")
+G.add_node("MVDS_1", nomVoltage=120, phase=1, w=10.0, vAr=0.0, nodeType="load")
+G.add_connection("DS5", "PB1", wireSize="3/0", conduitMat="PVC", length=10.0)
+G.add_connection("PB1", "DS1_A", wireSize="3/0", conduitMat="PVC", length=10.0)
+G.add_connection("DS1_A", "XFMR1", wireSize="3/0", conduitMat="steel", length=5.0)
+G.add_connection("XFMR1", "PNL_A", wireSize=6, conduitMat="steel", length=5.0)
+G.add_connection("PNL_A", "CCTV_1", wireSize=6, conduitMat="PVC", length=65.0)
+G.add_connection("PNL_A", "MVDS_1", wireSize=6, conduitMat="PVC", length=65.0)
 
-G.add_connection("service_xfmr", "xfmr1", wireSize=6, conduitMat="PVC", length=500.0)
-G.add_connection("xfmr1", "tap1", wireSize=4, conduitMat="PVC", length=200.0)
-G.add_connection("tap1", "load1", wireSize=4, conduitMat="PVC", length=200.0)
-G.add_connection("tap1", "load2", wireSize=4, conduitMat="PVC", length=200.0)
-G.add_connection("tap1", "load3", wireSize=4, conduitMat="PVC", length=200.0)
-G.add_connection("tap1", "tap2", wireSize=4, conduitMat="PVC", length=200.0)
-G.add_connection("tap2", "load4", wireSize=4, conduitMat="PVC", length=200.0)
-G.add_connection("tap2", "load5", wireSize=4, conduitMat="PVC", length=2000.0)
+
+G.add_node("PB2", phase=1, nodeType="bus", nomVoltage=480)
+G.add_node("DS3_A", phase=1, nodeType="bus", nomVoltage=480)
+G.add_node("XFMR2", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.0, rating=15.0,
+           nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+           nodeType="transformer")
+G.add_node("PNL_B", phase=1, nodeType="bus", nomVoltage=240)
+G.add_node("DMS_1", nomVoltage=240, phase=1, w=7000.0, vAr=0.0, nodeType="load")
+G.add_node("MCCTV_1", nomVoltage=120, phase=1, w=104.0, vAr=0.0, nodeType="load")
+G.add_connection("PB1", "PB2", wireSize="3/0", conduitMat="PVC", length=1800.0)
+G.add_connection("PB2", "DS3_A", wireSize="3/0", conduitMat="PVC", length=10.0)
+G.add_connection("DS3_A", "XFMR2", wireSize="3/0", conduitMat="steel", length=5.0)
+G.add_connection("XFMR2", "PNL_B", wireSize=4, conduitMat="steel", length=5.0)
+G.add_connection("PNL_B", "DMS_1", wireSize=4, conduitMat="PVC", length=250.0)
+G.add_connection("PNL_B", "MCCTV_1", wireSize=4, conduitMat="PVC", length=255.0)
+
+
+G.add_node("PB3", phase=1, nodeType="bus", nomVoltage=480)
+G.add_node("DS1_B", phase=1, nodeType="bus", nomVoltage=480)
+G.add_node("XFMR3", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.0, rating=7.5,
+           nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+           nodeType="transformer")
+G.add_node("PNL_A_1", phase=1, nodeType="bus", nomVoltage=240)
+G.add_node("CCTV_2", nomVoltage=240, phase=1, w=2881.0, vAr=0.0, nodeType="load")
+G.add_node("MVDS_2", nomVoltage=120, phase=1, w=10.0, vAr=0.0, nodeType="load")
+G.add_connection("PB2", "PB3", wireSize="3/0", conduitMat="PVC", length=2830.0)
+G.add_connection("PB3", "DS1_B", wireSize="3/0", conduitMat="PVC", length=10.0)
+G.add_connection("DS1_B", "XFMR3", wireSize="3/0", conduitMat="steel", length=5.0)
+G.add_connection("XFMR3", "PNL_A_1", wireSize=6, conduitMat="steel", length=5.0)
+G.add_connection("PNL_A_1", "CCTV_2", wireSize=6, conduitMat="PVC", length=45.0)
+G.add_connection("PNL_A_1", "MVDS_2", wireSize=6, conduitMat="PVC", length=145.0)
+
 
 #########################################################################################
-"""Model Graph #2 for Testing"""
-#########################################################################################
-
-G2 = RadialPowerSystem()
-
-G2.add_node("service", nomVoltage=120, phase=1, nodeType="service")
-G2.add_node("load1", nomVoltage=120, phase=1, w=1200.0, vAr=120.0, nodeType="load")
-G2.add_node("load2", nomVoltage=120, phase=1, w=1200.0, vAr=120.0, nodeType="load")
-
-
-G2.add_connection("service", "load2", wireSize=1, conduitMat="PVC", length=10000.0)
-G2.add_connection("service", "load1", wireSize=1, conduitMat="steel", length=10000.0)
-
-#########################################################################################
-"""Testing Calculations"""
+"""Calculations"""
 #########################################################################################
 
 #After per unit implementation
@@ -70,8 +89,16 @@ if __name__ == "__main__":
     calc_flows_PU(graphToCheck)
     calc_voltages_PU(graphToCheck)
     actual_conv(graphToCheck)
-    calc_sym_ssc_PU(graphToCheck)
-    # print graphToCheck.edges(data=True)
+    calc_sym_ssc(graphToCheck)
+    print graphToCheck.edges(data=True)
+    for node, data in graphToCheck.nodes(data=True):
+        try:
+            print node, ":"
+            print "Voltage=", data["trueVoltage"]
+            print "SSC_LL=", data["SymSSC"]
+        except KeyError:
+            pass
     # print graphToCheck.nodes(data=True)
     if plot:
-        draw_graph_labels(graphToCheck)
+        # draw_graph_labels(graphToCheck)
+        draw_graph_gv(graphToCheck)

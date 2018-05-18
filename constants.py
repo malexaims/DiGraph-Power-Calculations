@@ -74,5 +74,5 @@ compatWireSizes = ['14', '12', '10', '8', '6', '4', '3', '2', '1', '1/0', '2/0',
 compatWireMaterial = ['copper', 'aluminum']
 compatConduitMaterial = ['HDPE', 'PVC', "aluminum", "steel"]
 
-WBASE = 1000.0
-VARBASE = 1000.0
+WBASE = 1.0
+VARBASE = 1.0

@@ -72,8 +72,8 @@ def per_unit_conv(graph):
         #For transformers
         if graph.node[i]["nodeType"] == "transformer":
 
-            zPU = (complex(graph.node[i]["pctR"],graph.node[i]["pctX"]) * (sBase / (graph.node[i]["rating"]*1000.0)) * \
-                  ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"])) / \
+            zPU = (complex(graph.node[i]["pctR"]/100.0,graph.node[i]["pctX"]/100.0) * (sBase / (graph.node[i]["rating"]*1000.0)) *
+                  ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"])) /
                   graph.node[i]["nomPrimaryV"])**2.0)
 
             graph.node[i]["zPU"] = complex(-zPU.real,zPU.imag)
@@ -239,13 +239,13 @@ def calc_voltages_PU(graph):
         segment_vdrop_PU(graph, i[0], i[1])
 
 
-def calc_sym_ssc_PU(graph):
+def calc_sym_ssc(graph):
     """Calculates the maximum symmetrical short circuit current at each node on the network, starting from the "service" node
     then running down the digraph edges out to the load nodes. The series impedance from the "service" node
     to each other node on the network is used to calculate the short circuit current available. Determines and sets
     three-phase faults for three-phase nodes, and single line to ground faults and line to line faults for single phase nodes. Only
     function for symmetrical faults in three phase and single phase systems. Requires that the short circuit current avaliable is provided
-    for the secondary terminals of the service transformer.
+    for the secondary terminals of the service transformer. 
     """
     wBase, vArBase = WBASE, VARBASE
     sBase = complex(wBase, vArBase)
@@ -257,11 +257,12 @@ def calc_sym_ssc_PU(graph):
             break
 
     try:
-        zBase = (graph.node[serviceNode]["nomVoltage"].real**2.0) / math.sqrt(wBase**2+vArBase**2)
-        sourceZPU = (graph.node[serviceNode]["nomVoltage"] / graph.node[serviceNode]["sscXfmrSec"]) #Only works when ssc available is provided for the service xfmr secondary
+        zBase = (graph.node[serviceNode]["nomVoltage"]**2.0) / sBase
+        sourceZPU = (graph.node[serviceNode]["nomVoltage"] / graph.node[serviceNode]["sscXfmrSec"]) / zBase
+        # print "sourceZPU:", sourceZPU #Only works when ssc available is provided for the service xfmr secondary
     except KeyError:
         print ("""Missing input data for service node. Unable to perform short circuit current calculations.
-                  Avaliable short circuit current on secondary of service transformer required.""")
+                  Avaliable short circuit current on secondary of service transformer.""")
 
     for i in graph.nodes():
         #Move on from service node
@@ -296,11 +297,11 @@ def calc_sym_ssc_PU(graph):
         if graph.node[i]["phase"] == 1:
             try:
                 if graph.node[i]["nodeType"] == "transformer":
-                    graph.node[i]["SymSSC"] =  complex(((1.0/graph.node[i]["zSeriesPU"].real) * graph.node[i]["nomPrimaryV"].real),
-                                                       ((1.0/graph.node[i]["zSeriesPU"].imag) * graph.node[i]["nomPrimaryV"].imag))
+                    # graph.node[i]["SymSSC"] =  (1.0/(graph.node[i]["zSeriesPU"] * graph.node[i]["nomPrimaryV"]))
+                    graph.node[i]["SymSSC"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomPrimaryV"])
                 else:
-                    graph.node[i]["SymSSC"] =  complex(((1.0/graph.node[i]["zSeriesPU"].real) * graph.node[i]["nomVoltage"].real),
-                                                       ((1.0/graph.node[i]["zSeriesPU"].imag) * graph.node[i]["nomVoltage"].imag))
+                    # graph.node[i]["SymSSC"] =  (1.0/(graph.node[i]["zSeriesPU"] * graph.node[i]["nomVoltage"]))
+                    graph.node[i]["SymSSC"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomVoltage"])
             except KeyError:
                 print "Missing series per unit impedance for node {0}".format(i)
         #TODO: Implement SSC for three phase systems
