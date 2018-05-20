@@ -10,7 +10,7 @@ from constants import voltageCompatDict
 
 def loop_check(calc_flows_function):
     """Decorator to test for loops. The program is not designed to handle loops between nodes."""
-    def loop_check_wrapper(graph, **kwargs):    
+    def loop_check_wrapper(graph, **kwargs):
         test = True
         try:
            nx.find_cycle(graph, orientation='ignore')
@@ -19,10 +19,10 @@ def loop_check(calc_flows_function):
         assert test == False, "Loop detected between nodes. Please correct."
         return calc_flows_function(graph, **kwargs)
     return loop_check_wrapper
-    
-    
+
+
 def length_check(calc_flows_function):
-    """Decorator to test for edge lengths less than or equal to zero. 
+    """Decorator to test for edge lengths less than or equal to zero.
     Such edge lengths are not physically possible."""
     def length_check_wrapper(graph, **kwargs):
         edgeList = graph.edges()
@@ -40,7 +40,7 @@ def voltage_check(calc_flows_function):
     """Decorator to test for voltage compatibility of connected nodes."""
     def voltage_check_wrapper(graph, **kwargs):
         incompatList = []
-        edgeList = graph.edges()    
+        edgeList = graph.edges()
         for begNode, endNode in edgeList:
             begType = graph.node[begNode]["nodeType"]
             endType = graph.node[endNode]["nodeType"]
@@ -66,7 +66,8 @@ def voltage_check(calc_flows_function):
             raise ValueError("Voltages are not compatible between the following nodes (begNode, endNode):", incompatList)
         return calc_flows_function(graph, **kwargs)
     return voltage_check_wrapper
-    
+
+
 def over_voltage_check(graph, allowableOverVoltage=10.0): #TODO: make allowableOverVoltage a part of the program settings rather than a kwarg?
     """Function to test for loads recieving voltage significantly over thier nomVoltage. Execute after calc_flows()
     and calc_voltages().
@@ -76,17 +77,13 @@ def over_voltage_check(graph, allowableOverVoltage=10.0): #TODO: make allowableO
     incompatList = []
     for i in graph.nodes():
         if graph.node[i]["nodeType"] == "transformer":
-            maxVoltage = graph.node[i]["nomPrimaryV"] + graph.node[i]["nomPrimaryV"]*(allowableOverVoltage / 100.0)  
+            maxVoltage = graph.node[i]["nomPrimaryV"] + graph.node[i]["nomPrimaryV"]*(allowableOverVoltage / 100.0)
             if graph.node[i]["primaryVoltage"] > maxVoltage:
                 incompatList.append(i)
-        else: 
-            maxVoltage = graph.node[i]["nomVoltage"] + graph.node[i]["nomVoltage"]*(allowableOverVoltage / 100.0)  
+        else:
+            maxVoltage = graph.node[i]["nomVoltage"] + graph.node[i]["nomVoltage"]*(allowableOverVoltage / 100.0)
             if graph.node[i]["trueVoltage"] > maxVoltage:
-                incompatList.append(i)          
+                incompatList.append(i)
     if len(incompatList) > 0:
             raise ValueError("The following nodes are recieving overvoltages in excess of permitted limits:", incompatList)
     return
-    
-    
-    
-    

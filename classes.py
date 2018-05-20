@@ -13,6 +13,7 @@ class RadialPowerSystem(DiGraph):
 
     def __init__(self):
         super(RadialPowerSystem, self).__init__()
+        self._serviceNode = None
 
 
     def add_connection(self, begNode, endNode, wireSize=None, wireMat='copper', conduitMat=None, length=None):

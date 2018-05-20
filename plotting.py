@@ -8,13 +8,21 @@ Created on Sun May 06 19:22:43 2018
 import networkx as nx
 import matplotlib.pyplot as plt
 
-def draw_graph(graph, fontSize=8, scaleFactor=1, figSize=(10,10), nodeSize=1000, plotDrop=True):
+#TODO: Implement a better way to scale node labels that are offset from node
+
+def draw_graph(graph, fontSize=8, scaleFactor=0.029, figSize=(1,1), nodeSize=1000, plotDrop=True):
     """Plots a graph visualization with various edge and node labels.
     """
 
-    scale = len(list(graph.nodes()))*scaleFactor
+    # scale = len(list(graph.nodes())) * scaleFactor
 
     pos = nx.nx_agraph.graphviz_layout(graph, prog='dot')
+    xCoords = sorted([position[0] for node, position in pos.items()])
+    yCoords = sorted([position[1] for node, position in pos.items()])
+
+    scale = (((xCoords[-1] - xCoords[0])**2 + (yCoords[-1] - yCoords[0])**2)**0.5) * scaleFactor
+    print "scale", scale
+
     pos1 = {k:[v[0]-scale*1.1,v[1]] for k,v in pos.items()}
     pos1a = {k:[v[0]-scale*1.1,v[1]-scale*0.5] for k,v in pos.items()}
     pos2 = {k:[v[0]+scale*1.4,v[1]] for k,v in pos.items()}
@@ -25,8 +33,7 @@ def draw_graph(graph, fontSize=8, scaleFactor=1, figSize=(10,10), nodeSize=1000,
                            alpha=1)
 
     nx.draw_networkx_edges(graph, pos,
-                           width=1.0,
-                           arrowsize=25)
+                           width=1.0)
 
     edgeILabels = {(beg,end):'{0:.2f}A'.format(data["I"].real) for beg,end,data in graph.edges(data=True)}
 
@@ -51,13 +58,11 @@ def draw_graph(graph, fontSize=8, scaleFactor=1, figSize=(10,10), nodeSize=1000,
 
     nodeSSCLabels = {}
     for i in graph.nodes():
-        if graph.node[i]["nodeType"] == "load":
-            try:
-                nodeSSCLabels[i] = '{0.real:.1f} SSC_LL'.format(graph.node[i]["SymSSC"])
-            except KeyError:
-                pass
-        else:
-            continue
+        try:
+            nodeSSCLabels[i] = '{0.real:.1f} SSC_LL'.format(graph.node[i]["SymSSC"])
+        except KeyError:
+            pass
+
 
     nx.draw_networkx_edge_labels(graph, pos, edge_labels=edgeILabels, font_size=fontSize)
     nx.draw_networkx_labels(graph, pos1, nodeVLabels, font_size=fontSize)

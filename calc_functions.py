@@ -22,8 +22,7 @@ from constants import WBASE, VARBASE
 #TODO: Write a function that sizes wires based on voltage drop permitted to furthest load. Wire size required for ampacity
 #needs to be the lower bound.
 
-#TODO: Write a function that calculates falt currents and places this information on each node. Need to account
-#for three phase faults and single phase L-L and L-G faults at a minimumself.
+#TODO: Need to account for three phase faults and single phase L-G faults to expand SSC calculations.
 
 #TODO: Add conversion of fault current from PU to actual.
 
@@ -62,7 +61,7 @@ def per_unit_conv(graph):
             data["zBase"] = complex(((data["vBase"].real**2.0) / sBase.real), ((data["vBase"].imag**2.0) / sBase.imag))
         except KeyError:
             print "Voltage Base not set for edge:", i
-    #Calculate the per unit impedance of all nodes and egdes. Service has no internal impedance.
+    #Calculate the per unit impedance of all nodes and egdes.
     #TODO: Determine better way to treat source impedance since generators will have non negligable internal impedance. Service nodes dont have a impedance attribute currently.
     for i in graph.nodes():
         #For loads
@@ -193,7 +192,8 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
         vDropPU = math.sqrt(3) * complex(IPU.real,-IPU.imag) * zPU
     else:
         raise ValueError("Phase value for edge must be 1 or 3")
-    assert vDropPU.real < 1.0, "Segment voltge drop exceeds starting voltage. Check network configuration."
+    assert vDropPU.real < 1.0, ("Segment voltge drop exceeds starting voltage between {0} and {1}."
+                                 " Check network configuration and inputs.".format(sourceNode, endNode))
     #Check for nodes that are transformers and treat them specially
     edge["vDropPU"] = vDropPU
     if graph.node[endNode]["nodeType"] == "transformer":
@@ -245,7 +245,7 @@ def calc_sym_ssc(graph):
     to each other node on the network is used to calculate the short circuit current available. Determines and sets
     three-phase faults for three-phase nodes, and single line to ground faults and line to line faults for single phase nodes. Only
     function for symmetrical faults in three phase and single phase systems. Requires that the short circuit current avaliable is provided
-    for the secondary terminals of the service transformer. 
+    for the secondary terminals of the service transformer.
     """
     wBase, vArBase = WBASE, VARBASE
     sBase = complex(wBase, vArBase)
@@ -259,7 +259,6 @@ def calc_sym_ssc(graph):
     try:
         zBase = (graph.node[serviceNode]["nomVoltage"]**2.0) / sBase
         sourceZPU = (graph.node[serviceNode]["nomVoltage"] / graph.node[serviceNode]["sscXfmrSec"]) / zBase
-        # print "sourceZPU:", sourceZPU #Only works when ssc available is provided for the service xfmr secondary
     except KeyError:
         print ("""Missing input data for service node. Unable to perform short circuit current calculations.
                   Avaliable short circuit current on secondary of service transformer.""")
@@ -297,13 +296,12 @@ def calc_sym_ssc(graph):
         if graph.node[i]["phase"] == 1:
             try:
                 if graph.node[i]["nodeType"] == "transformer":
-                    # graph.node[i]["SymSSC"] =  (1.0/(graph.node[i]["zSeriesPU"] * graph.node[i]["nomPrimaryV"]))
                     graph.node[i]["SymSSC"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomPrimaryV"])
                 else:
-                    # graph.node[i]["SymSSC"] =  (1.0/(graph.node[i]["zSeriesPU"] * graph.node[i]["nomVoltage"]))
                     graph.node[i]["SymSSC"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomVoltage"])
             except KeyError:
                 print "Missing series per unit impedance for node {0}".format(i)
+
         #TODO: Implement SSC for three phase systems
         # if graph.node[i]["phase"] == 3:
         #     try:

@@ -16,11 +16,14 @@ import matplotlib.pyplot as plt
 
 
 #########################################################################################
-"""Model Graph #1 for Testing"""
+"""Input Radial Power System Data Below"""
 #########################################################################################
 
-"""Notes:
-- nomVoltage, nomSecondaryV, nomPrimaryV must be an int
+"""Instruction and usage notes:
+- nomVoltage, nomSecondaryV, nomPrimaryV must be an integer.
+- If the program is not working, and messages are not desribing the problem clearly, check inputs to make source
+  there are no isolated nodes.
+- Must instantiate a RadialPowerSystem object, then enter nodes and edges between the nodes for the program to function.
 """
 
 G = RadialPowerSystem()
@@ -87,6 +90,11 @@ G.add_connection("PB2", "PB4", wireSize="1/0", conduitMat="PVC", length=1400.0)
 G.add_connection("PB4", "DS3_B", wireSize="1/0", conduitMat="PVC", length=10.0)
 G.add_connection("DS3_B", "XFMR4", wireSize="1/0", conduitMat="steel", length=5.0)
 G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
+
+G1 = RadialPowerSystem()
+G1.add_node("1", nodeType="service", nomVoltage=480, phase=1, sscXfmrSec=75000.0)
+G1.add_node("2", nomVoltage=240, phase=1, w=2000.0, vAr=0.0, nodeType="load")
+G1.add_connection("1", "2", wireSize="1/0", conduitMat="PVC", length=1400.0)
 
 
 #########################################################################################
