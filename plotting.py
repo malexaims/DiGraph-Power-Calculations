@@ -23,9 +23,9 @@ def draw_graph(graph, fontSize=8, scaleFactor=0.029, figSize=(1,1), nodeSize=100
     scale = (((xCoords[-1] - xCoords[0])**2 + (yCoords[-1] - yCoords[0])**2)**0.5) * scaleFactor
     print "scale", scale
 
-    pos1 = {k:[v[0]-scale*1.1,v[1]] for k,v in pos.items()}
+    pos1 = {k:[v[0]-scale*1.1,v[1]-scale*1] for k,v in pos.items()}
     pos1a = {k:[v[0]-scale*1.1,v[1]-scale*0.5] for k,v in pos.items()}
-    pos2 = {k:[v[0]+scale*1.4,v[1]] for k,v in pos.items()}
+    pos2 = {k:[v[0]+scale*1.4,v[1]-scale*0.5] for k,v in pos.items()}
 
     nx.draw_networkx_nodes(graph, pos,
                            node_color='r',

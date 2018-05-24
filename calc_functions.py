@@ -271,8 +271,10 @@ def calc_sym_ssc(graph):
         zSeriesPU = sourceZPU #Start with service impedance from source
         #Sum series edge impedances between service point and node
         for j in range(len(path)-1):
+            if not graph.node[path[j]]["phase"] == 1: #TODO: Remove once software can calculate three phase fault currents.
+                raise Exception("SSC only works for single phase systems currently")
             try:
-                zSeriesPU += graph[path[j]][path[j+1]]["zPU"]
+                zSeriesPU += 2.0 * graph[path[j]][path[j+1]]["zPU"] #Mutiply by 2 for return impedance of conductors
             except KeyError:
                 print "zPU not set for edge between {0} and {1}".format(path[j], path[j+1])
         #If transformer is on the path add that to the series Impedance
