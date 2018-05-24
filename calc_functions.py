@@ -151,7 +151,7 @@ def actual_conv(graph):
             data["I"] = data["IPU"] * (data["vBase"]/(data["zBase"] * math.sqrt(3)))
         else:
             data["I"] = data["IPU"] * (data["vBase"]/data["zBase"])
-    #Calculate actual voltage at each edge
+    #Calculate actual voltage at each node
     for i in graph.nodes():
         if graph.node[i]["nodeType"] == "service":
             pass
@@ -209,8 +209,7 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
 
         graph.node[endNode]["secondaryVoltagePU"] = ((graph.node[endNode]["primaryVoltagePU"] -
                                                     (graph.node[endNode]["primaryVoltagePU"] * graph.node[endNode]["tapSetting"])) -
-                                                    (IPU * ((graph.node[endNode]["nomSecondaryV2"]/graph.node[endNode]["nomPrimaryV"])**2.0 /
-                                                    graph.node[endNode]["zPU"]))) #TODO: Fix for transformers with two voltage secondaries... does this even need to be handled?
+                                                    (IPU * graph.node[endNode]["zPU"])) #TODO: Fix for transformers with two voltage secondaries... does this even need to be handled?
         return
     if graph.node[sourceNode]["nodeType"] == "transformer":
         graph.node[endNode]["trueVoltagePU"] = graph.node[sourceNode]["secondaryVoltagePU"] - vDropPU
