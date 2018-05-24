@@ -5,7 +5,9 @@ Created on Sat Aug 19 07:56:31 2017
 @author: AtotheM
 """
 import sys
-sys.path.insert(0, 'Z:/2018 Projects/11181 (I-75 ITS fm SR 50 to Sumter County_Wantman)/Caclulations/DiGraph-Power-Calculations')
+import os
+dir_path = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, dir_path)
 
 from calc_functions import *
 from checker_functions import over_voltage_check
@@ -121,4 +123,4 @@ if __name__ == "__main__":
     # print graphToCheck.nodes(data=True)
     if plot:
         # draw_graph_labels(graphToCheck)
-        draw_graph(graphToCheck)
+        draw_graph_2(graphToCheck)

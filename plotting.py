@@ -4,72 +4,59 @@ Created on Sun May 06 19:22:43 2018
 
 @author: AtotheM
 """
+import os
+dir_path = os.path.dirname(os.path.realpath(__file__))
 
 import networkx as nx
 import matplotlib.pyplot as plt
+from PIL import Image
 
-#TODO: Implement a better way to scale node labels that are offset from node
 
-def draw_graph(graph, fontSize=8, scaleFactor=0.029, figSize=(1,1), nodeSize=1000, plotDrop=True):
+def draw_graph_2(graph):
     """Plots a graph visualization with various edge and node labels.
     """
 
     # scale = len(list(graph.nodes())) * scaleFactor
 
-    pos = nx.nx_agraph.graphviz_layout(graph, prog='dot')
-    xCoords = sorted([position[0] for node, position in pos.items()])
-    yCoords = sorted([position[1] for node, position in pos.items()])
+    aGraph = nx.nx_agraph.to_agraph(graph)
 
-    scale = (((xCoords[-1] - xCoords[0])**2 + (yCoords[-1] - yCoords[0])**2)**0.5) * scaleFactor
-    print "scale", scale
+    for edge in aGraph.edges_iter():
+        edge.attr['label'] = '{0:.2f}A'.format(graph[edge[0]][edge[1]]["I"].real)
+        print edge.attr['label']
 
-    pos1 = {k:[v[0]-scale*1.1,v[1]-scale*1] for k,v in pos.items()}
-    pos1a = {k:[v[0]-scale*1.1,v[1]-scale*0.5] for k,v in pos.items()}
-    pos2 = {k:[v[0]+scale*1.4,v[1]-scale*0.5] for k,v in pos.items()}
 
-    nx.draw_networkx_nodes(graph, pos,
-                           node_color='r',
-                           node_size=1000,
-                           alpha=1)
-
-    nx.draw_networkx_edges(graph, pos,
-                           width=1.0)
-
-    edgeILabels = {(beg,end):'{0:.2f}A'.format(data["I"].real) for beg,end,data in graph.edges(data=True)}
-
-    nodeVLabels = {}
-    for i in graph.nodes():
+    for n in aGraph.nodes():
+        i = aGraph.get_node(n)
+        label = n
+        print label
         try:
-            if graph.node[i]["nodeType"] == "transformer":
-                nodeVLabels[i] = '{0.real:.1f}/{1.real:.1f}V'.format(graph.node[i]["primaryVoltage"], graph.node[i]["secondaryVoltage2"])
+            if graph.node[n]["nodeType"] == "transformer":
+                nodeVLabel = '{0.real:.1f}/{1.real:.1f}V'.format(graph.node[n]["primaryVoltage"], graph.node[n]["secondaryVoltage2"])
+                label += '\\n' + nodeVLabel
             else:
-                nodeVLabels[i] = '{0.real:.1f}V'.format(graph.node[i]["trueVoltage"])
+                nodeVLabel = '{0.real:.1f}V'.format(graph.node[i]["trueVoltage"])
+                label += '\\n' + nodeVLabel
         except KeyError:
             pass
 
-    if plotDrop:
-        nodeVdLabels = {}
-        for i in graph.nodes():
-            try:
-                pctVdrop = 100.0 * (graph.node[i]["nomVoltage"] - graph.node[i]["trueVoltage"]) / graph.node[i]["nomVoltage"]
-                nodeVdLabels[i] = '{0.real:.1f} % Drop'.format(pctVdrop)
-            except KeyError:
-                pass
-
-    nodeSSCLabels = {}
-    for i in graph.nodes():
         try:
-            nodeSSCLabels[i] = '{0.real:.1f} SSC_LL'.format(graph.node[i]["SymSSC"])
+            pctVdrop = 100.0 * (graph.node[n]["nomVoltage"] - graph.node[n]["trueVoltage"]) / graph.node[n]["nomVoltage"]
+            nodeVdLabel = '{0.real:.1f} % Drop'.format(pctVdrop)
+            label += '\\n' + nodeVdLabel
         except KeyError:
             pass
 
+        try:
+            nodeSSCLabel = '{0.real:.1f} SSC_LL'.format(graph.node[n]["SymSSC"])
+            label += '\\n' + nodeSSCLabel
+        except KeyError:
+            pass
 
-    nx.draw_networkx_edge_labels(graph, pos, edge_labels=edgeILabels, font_size=fontSize)
-    nx.draw_networkx_labels(graph, pos1, nodeVLabels, font_size=fontSize)
-    nx.draw_networkx_labels(graph, pos1a, nodeVdLabels, font_size=fontSize)
-    nx.draw_networkx_labels(graph, pos2, nodeSSCLabels, font_size=fontSize)
-    nx.draw_networkx_labels(graph, pos, font_size=fontSize)
+        n.attr['label'] = label
+        aGraph.node_attr['style'] = 'filled'
+        aGraph.node_attr['fillcolor'] = "#CCCCFF"
 
-    plt.axis('off')
-    plt.rcParams["figure.figsize"] = [i for i in figSize]
-    plt.show()
+    aGraph.layout(prog='dot')
+    aGraph.draw(dir_path+'output.png')
+    img = Image.open(dir_path+'output.png')
+    img.show()
