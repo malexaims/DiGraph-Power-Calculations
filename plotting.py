@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 
-def draw_graph_2(graph):
+def draw_graph(graph):
     """Plots a graph visualization with various edge and node labels.
     """
 

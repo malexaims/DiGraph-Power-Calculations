@@ -123,4 +123,4 @@ if __name__ == "__main__":
     # print graphToCheck.nodes(data=True)
     if plot:
         # draw_graph_labels(graphToCheck)
-        draw_graph_2(graphToCheck)
+        draw_graph(graphToCheck)
