@@ -239,11 +239,11 @@ def calc_voltages_PU(graph):
 
 
 def calc_sym_ssc(graph):
-    """Calculates the maximum symmetrical short circuit current at each node on the network, starting from the "service" node
-    then running down the digraph edges out to the load nodes. The series impedance from the "service" node
-    to each other node on the network is used to calculate the short circuit current available. Determines and sets
-    three-phase faults for three-phase nodes, and single line to ground faults and line to line faults for single phase nodes. Only
-    function for symmetrical faults in three phase and single phase systems. Requires that the short circuit current avaliable is provided
+    #TODO: Update docstring when functionality is expanded.... L-G faults and three-phase systems
+    """Calculates the maximum symmetrical short circuit current at each node on the network using a point-to-point calculation procedure,
+    starting from the "service" node then running down the digraph edges out to the load nodes. The series impedance from the
+    "service" node to each other node on the network is used to calculate the short circuit current available. Determines and sets
+    single phase line to line faults for single phase nodes. Only function for symmetrical faults in three phase and single phase systems. Requires that the short circuit current avaliable is provided
     for the secondary terminals of the service transformer.
     """
     wBase, vArBase = WBASE, VARBASE
@@ -272,7 +272,7 @@ def calc_sym_ssc(graph):
         #Sum series edge impedances between service point and node
         for j in range(len(path)-1):
             if not graph.node[path[j]]["phase"] == 1: #TODO: Remove once software can calculate three phase fault currents.
-                raise Exception("SSC only works for single phase systems currently")
+                raise Exception("calc_sym_ssc() only works for single phase systems currently")
             try:
                 zSeriesPU += 2.0 * graph[path[j]][path[j+1]]["zPU"] #Mutiply by 2 for return impedance of conductors
             except KeyError:
@@ -297,9 +297,9 @@ def calc_sym_ssc(graph):
         if graph.node[i]["phase"] == 1:
             try:
                 if graph.node[i]["nodeType"] == "transformer":
-                    graph.node[i]["SymSSC"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomPrimaryV"])
+                    graph.node[i]["SSC_LL"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomPrimaryV"])
                 else:
-                    graph.node[i]["SymSSC"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomVoltage"])
+                    graph.node[i]["SSC_LL"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomVoltage"])
             except KeyError:
                 print "Missing series per unit impedance for node {0}".format(i)
 

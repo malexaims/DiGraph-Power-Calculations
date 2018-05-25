@@ -112,15 +112,15 @@ if __name__ == "__main__":
     calc_voltages_PU(graphToCheck)
     actual_conv(graphToCheck)
     calc_sym_ssc(graphToCheck)
-    print graphToCheck.edges(data=True)
-    for node, data in graphToCheck.nodes(data=True):
-        try:
-            print node, ":"
-            print "Voltage=", data["trueVoltage"]
-            print "SSC_LL=", data["SymSSC"]
-        except KeyError:
-            pass
+    # print graphToCheck.edges(data=True)
+    # for node, data in graphToCheck.nodes(data=True):
+    #     try:
+    #         print node, ":"
+    #         print "Voltage=", data["trueVoltage"]
+    #         print "SSC_LL=", data["SymSSC"]
+    #     except KeyError:
+    #         pass
     # print graphToCheck.nodes(data=True)
     if plot:
         # draw_graph_labels(graphToCheck)
-        draw_graph(graphToCheck)
+        draw_graph(graphToCheck, dir_path, fontSize=15)

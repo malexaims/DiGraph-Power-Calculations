@@ -12,23 +12,25 @@ import matplotlib.pyplot as plt
 from PIL import Image
 
 
-def draw_graph(graph):
+def draw_graph(graph, outPutPath=None, fontSize=10):
     """Plots a graph visualization with various edge and node labels.
     """
-
+    try:
+        fontSize = str(fontSize)
+    except TypeError:
+        print "Incorrect fontSize kwarg input"
+    if outPutPath == None:
+        raise Exception("Output path required for draw_graph()")
     # scale = len(list(graph.nodes())) * scaleFactor
 
     aGraph = nx.nx_agraph.to_agraph(graph)
 
     for edge in aGraph.edges_iter():
         edge.attr['label'] = '{0:.2f}A'.format(graph[edge[0]][edge[1]]["I"].real)
-        print edge.attr['label']
-
 
     for n in aGraph.nodes():
         i = aGraph.get_node(n)
         label = n
-        print label
         try:
             if graph.node[n]["nodeType"] == "transformer":
                 nodeVLabel = '{0.real:.1f}/{1.real:.1f}V'.format(graph.node[n]["primaryVoltage"], graph.node[n]["secondaryVoltage2"])
@@ -47,7 +49,7 @@ def draw_graph(graph):
             pass
 
         try:
-            nodeSSCLabel = '{0.real:.1f} SSC_LL'.format(graph.node[n]["SymSSC"])
+            nodeSSCLabel = '{0.real:.1f} SSC_LL'.format(graph.node[n]["SSC_LL"])
             label += '\\n' + nodeSSCLabel
         except KeyError:
             pass
@@ -55,8 +57,10 @@ def draw_graph(graph):
         n.attr['label'] = label
         aGraph.node_attr['style'] = 'filled'
         aGraph.node_attr['fillcolor'] = "#CCCCFF"
+        aGraph.node_attr['fontsize'] = fontSize
+        aGraph.edge_attr['fontsize'] = fontSize
 
     aGraph.layout(prog='dot')
-    aGraph.draw(dir_path+'output.png')
-    img = Image.open(dir_path+'output.png')
-    img.show()
+    aGraph.draw(outPutPath+'/System_Render.tiff')
+    # img = Image.open(dir_path+'output.png')
+    # img.show()
