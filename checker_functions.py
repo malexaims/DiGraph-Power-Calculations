@@ -6,6 +6,7 @@ Created on Thu Aug 24 20:50:51 2017
 """
 import networkx as nx
 from constants import voltageCompatDict
+from helper_functions import get_node_voltage
 
 
 def loop_check(calc_flows_function):
@@ -49,13 +50,13 @@ def voltage_check(calc_flows_function):
                 endVoltage = graph.node[endNode]["nomPrimaryV"]
             elif begType == "transformer":
                 begVoltage = graph.node[begNode]["nomSecondaryV2"] #TODO: Dosent account for nomSecondaryV1, fix.
-                endVoltage = graph.node[endNode]["nomVoltage"]
+                endVoltage = get_node_voltage(graph, endNode)
             elif endType == "transformer":
-                begVoltage= graph.node[begNode]["nomVoltage"]
+                begVoltage= get_node_voltage(graph, begNode)
                 endVoltage = graph.node[endNode]["nomPrimaryV"]
             elif begType != "transformer" and endType != "transformer":
-                begVoltage = graph.node[begNode]["nomVoltage"]
-                endVoltage = graph.node[endNode]["nomVoltage"]
+                begVoltage= get_node_voltage(graph, begNode)
+                endVoltage = get_node_voltage(graph, endNode)
             try:
                 test = endVoltage in voltageCompatDict[str(begVoltage)]
             except KeyError:
@@ -69,7 +70,7 @@ def voltage_check(calc_flows_function):
 
 
 def over_voltage_check(graph, allowableOverVoltage=10.0): #TODO: make allowableOverVoltage a part of the program settings rather than a kwarg?
-    """Function to test for loads recieving voltage significantly over thier nomVoltage. Execute after calc_flows()
+    """Function to test for loads recieving voltage significantly over thier nominal voltage. Execute after calc_flows()
     and calc_voltages().
     Inputs:
     - graph: power system Digraph
@@ -81,7 +82,7 @@ def over_voltage_check(graph, allowableOverVoltage=10.0): #TODO: make allowableO
             if graph.node[i]["primaryVoltage"] > maxVoltage:
                 incompatList.append(i)
         else:
-            maxVoltage = graph.node[i]["nomVoltage"] + graph.node[i]["nomVoltage"]*(allowableOverVoltage / 100.0)
+            maxVoltage = get_node_voltage(graph, i) + get_node_voltage(graph, i) * (allowableOverVoltage / 100.0)
             if graph.node[i]["trueVoltage"] > maxVoltage:
                 incompatList.append(i)
     if len(incompatList) > 0:

@@ -10,6 +10,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 import networkx as nx
 import matplotlib.pyplot as plt
 from PIL import Image
+from helper_functions import get_node_voltage
 
 
 def draw_graph(graph, outPutPath=None, fontSize=10):
@@ -42,15 +43,23 @@ def draw_graph(graph, outPutPath=None, fontSize=10):
             pass
 
         try:
-            pctVdrop = 100.0 * (graph.node[n]["nomVoltage"] - graph.node[n]["trueVoltage"]) / graph.node[n]["nomVoltage"]
+            if graph.node[n]["nodeType"] == "transformer":
+                raise KeyError
+            pctVdrop = 100.0 * (get_node_voltage(graph, n) - graph.node[n]["trueVoltage"]) / get_node_voltage(graph, n)
             nodeVdLabel = '{0.real:.1f} % Drop'.format(pctVdrop)
             label += '\\n' + nodeVdLabel
         except KeyError:
             pass
 
         try:
-            nodeSSCLabel = '{0.real:.1f} SSC_LL'.format(graph.node[n]["SSC_LL"])
-            label += '\\n' + nodeSSCLabel
+            nodeSSCLLLabel = '{0.real:.1f} SSC_LL'.format(graph.node[n]["SSC_LL"])
+            label += '\\n' + nodeSSCLLLabel
+        except KeyError:
+            pass
+
+        try:
+            nodeSSCLNLabel = '{0.real:.1f} SSC_LN'.format(graph.node[n]["SSC_LN"])
+            label += '\\n' + nodeSSCLNLabel
         except KeyError:
             pass
 

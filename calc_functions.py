@@ -8,6 +8,7 @@ Created on Sun Aug 06 07:53:19 2017
 import networkx as nx
 import math
 from checker_functions import loop_check, length_check, voltage_check
+from helper_functions import get_node_voltage
 from constants import WBASE, VARBASE
 
 
@@ -40,21 +41,17 @@ def per_unit_conv(graph):
     #Set the voltage bases for each edge. Node bases will come from nominal voltage settings.
     for beg,end,data in graph.edges(data=True):
         if graph.in_degree(beg) == 0:
-            data["vBase"] = graph.node[beg]["nomVoltage"]
+            data["vBase"] = get_node_voltage(graph, beg)
         if graph.node[end]["nodeType"] == "transformer":
             data["vBase"] = graph.node[end]["nomPrimaryV"]
         else:
-            try:
-                data["vBase"] = graph.node[end]["nomVoltage"]
-            except KeyError:
-                pass
+            data["vBase"] = get_node_voltage(graph, end)
     #Set the Zbases for all nodes except transformers (dont need to for transformers)
     for i in graph.nodes():
-        if graph.node[i]["nodeType"] == "load":
-            try:
-                graph.node[i]["zBase"] = (graph.node[i]["nomVoltage"]**2.0) / sBase
-            except KeyError:
-                print "Voltage Base not set for node:", i
+        if graph.node[i]["nodeType"] == "transformer":
+            continue
+        else:
+            graph.node[i]["zBase"] = (get_node_voltage(graph, i)**2.0) / sBase
     #Set the ZBases for all edges
     for beg,end,data in graph.edges(data=True):
         try:
@@ -66,7 +63,7 @@ def per_unit_conv(graph):
     for i in graph.nodes():
         #For loads
         if graph.node[i]["nodeType"] == "load":
-            zPU = ((graph.node[i]["nomVoltage"]**2.0) / complex(graph.node[i]["w"], graph.node[i]["vAr"])) / graph.node[i]["zBase"]
+            zPU = ((get_node_voltage(graph, i)**2.0) / complex(graph.node[i]["w"], graph.node[i]["vAr"])) / graph.node[i]["zBase"]
             graph.node[i]["zPU"] = zPU
         #For transformers
         if graph.node[i]["nodeType"] == "transformer":
@@ -160,7 +157,11 @@ def actual_conv(graph):
             graph.node[i]["secondaryVoltage1"] = graph.node[i]["secondaryVoltagePU"] * graph.node[i]["nomSecondaryV1"] #TODO: Transformers with only one secondary voltage
             graph.node[i]["secondaryVoltage2"] = graph.node[i]["secondaryVoltagePU"] * graph.node[i]["nomSecondaryV2"] #TODO: Transformers with only one secondary voltage
         else:
-            graph.node[i]["trueVoltage"] = graph.node[i]["trueVoltagePU"] * graph.node[i]["nomVoltage"]
+            try:
+                graph.node[i]["trueVoltage"] = graph.node[i]["trueVoltagePU"] * graph.node[i]["nomVLL"]
+            except KeyError:
+                graph.node[i]["trueVoltage"] = graph.node[i]["trueVoltagePU"] * graph.node[i]["nomVLN"]
+
 
 
 def segment_vdrop_PU(graph, sourceNode, endNode):
@@ -176,9 +177,9 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
     if graph.node[sourceNode]["nodeType"] == "transformer" and graph.node[endNode]["nodeType"] == "transformer":
         vSPU = graph.node[sourceNode]["nomSecondaryV2"] / graph.node[endNode]["nomPrimaryV"]#TODO: Fix for transformers with one voltage secondary
     elif graph.node[sourceNode]["nodeType"] == "transformer":
-        vSPU = graph.node[sourceNode]["nomSecondaryV2"] / graph.node[endNode]["nomVoltage"] #TODO: Fix for transformers with one voltage secondary
+        vSPU = graph.node[sourceNode]["nomSecondaryV2"] / get_node_voltage(graph, endNode) #TODO: Fix for transformers with one voltage secondary
     elif graph.node[endNode]["nodeType"] == "transformer":
-        vSPU = graph.node[sourceNode]["nomVoltage"] / graph.node[endNode]["nomPrimaryV"]
+        vSPU = get_node_voltage(graph, sourceNode) / graph.node[endNode]["nomPrimaryV"]
     else:
         vSPU = 1
     IPU = complex(wPU, vArPU) / vSPU
@@ -256,50 +257,68 @@ def calc_sym_ssc(graph):
             break
 
     try:
-        zBase = (graph.node[serviceNode]["nomVoltage"]**2.0) / sBase
-        sourceZPU = (graph.node[serviceNode]["nomVoltage"] / graph.node[serviceNode]["sscXfmrSec"]) / zBase
+        serviceVoltage = get_node_voltage(graph, serviceNode)
+        zBase = (serviceVoltage**2.0) / sBase
+        sourceZPULL = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]) / zBase
+        sourceZPULN = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]*1.5) / zBase #TODO: Find better way... this is rough assumption
     except KeyError:
         print ("""Missing input data for service node. Unable to perform short circuit current calculations.
                   Avaliable short circuit current on secondary of service transformer.""")
 
     for i in graph.nodes():
         #Move on from service node
-        if graph.in_degree(i) == 0:
+        if i == serviceNode:
             continue
         length, path = nx.bidirectional_dijkstra(graph, serviceNode, i)
         #TODO: Implement way to start with a starting SSC that sets a upstream system impedance
-        zSeriesPU = sourceZPU #Start with service impedance from source
+        zSeriesPULL = sourceZPULL #Start with service impedance from source
+        zSeriesPULN = sourceZPULN
+        zEdgeSeriesPU = 0
         #Sum series edge impedances between service point and node
         for j in range(len(path)-1):
             if not graph.node[path[j]]["phase"] == 1: #TODO: Remove once software can calculate three phase fault currents.
                 raise Exception("calc_sym_ssc() only works for single phase systems currently")
             try:
-                zSeriesPU += 2.0 * graph[path[j]][path[j+1]]["zPU"] #Mutiply by 2 for return impedance of conductors
+                zEdgeSeriesPU += 2.0 * graph[path[j]][path[j+1]]["zPU"] #Mutiply by 2 for return impedance of conductors
             except KeyError:
                 print "zPU not set for edge between {0} and {1}".format(path[j], path[j+1])
         #If transformer is on the path add that to the series Impedance
+        zSeriesPULL += zEdgeSeriesPU
+        zSeriesPULN += zEdgeSeriesPU * 1.0 * ((2 / 1)**2.0) #TODO: Only works for single phase center tapped systems... consider setting ratio from upstream transformer or service whatever is closer
         for y in path:
             if graph.node[y]["nodeType"] == "transformer":
                 try:
-                    zSeriesPU += graph.node[y]["zPU"]
+                    zSeriesPULL += graph.node[y]["zPU"]
+                    zSeriesPULN += complex(graph.node[y]["zPU"].real*1.5, graph.node[y]["zPU"].imag*1.2)
                 except KeyError:
                     print "zPU not set for transformer {0}".format(y)
         #If transformer is the node where zSeriesPU is being set, dont include that transformers impedance (ssc at primary)
         if graph.node[i]["nodeType"] == "transformer":
-                graph.node[i]["zSeriesPU"] = zSeriesPU - graph.node[i]["zPU"]
+                graph.node[i]["zSeriesPULL"] = zSeriesPULL - graph.node[i]["zPU"]
+                graph.node[i]["zSeriesPULN"] = zSeriesPULN - complex(graph.node[i]["zPU"].real*1.5, graph.node[i]["zPU"].imag*1.2)
                 continue
-        graph.node[i]["zSeriesPU"] = zSeriesPU
+        graph.node[i]["zSeriesPULL"] = zSeriesPULL
+        graph.node[i]["zSeriesPULN"] = zSeriesPULN
 
     for i in graph.nodes():
-        if graph.in_degree(i) == 0:
-            serviceNode = i
+        if i == serviceNode:
+            graph.node[i]["SSC_LL"] = graph.node[i]['sscXfmrSec']
             continue
         if graph.node[i]["phase"] == 1:
             try:
                 if graph.node[i]["nodeType"] == "transformer":
-                    graph.node[i]["SSC_LL"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomPrimaryV"])
+                    graph.node[i]["SSC_LL"] =  (1.0 / graph.node[i]["zSeriesPULL"]) * (sBase / graph.node[i]["nomPrimaryV"])
                 else:
-                    graph.node[i]["SSC_LL"] =  (1.0 / graph.node[i]["zSeriesPU"]) * (sBase / graph.node[i]["nomVoltage"])
+                    try:
+                        graph.node[i]["SSC_LL"] =  (1.0 / graph.node[i]["zSeriesPULL"]) * (sBase / graph.node[i]["nomVLL"])
+                    except KeyError:
+                        pass
+                    try:
+                        # zSeriesPULN = graph.node[i]["zSeriesPULN"] * 1.0 * (graph.node[i]["nomVLN"]*2 / graph.node[i]["nomVLN"])**2.0
+                        # graph.node[i]["SSC_LN"] = (1.0 / zSeriesPULN) * (sBase / graph.node[i]["nomVLN"])
+                        graph.node[i]["SSC_LN"] = (1.0 / graph.node[i]["zSeriesPULN"]) * (sBase / graph.node[i]["nomVLN"])
+                    except KeyError:
+                        pass
             except KeyError:
                 print "Missing series per unit impedance for node {0}".format(i)
 
