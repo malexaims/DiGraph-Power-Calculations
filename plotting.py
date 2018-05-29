@@ -27,8 +27,13 @@ def draw_graph(graph, outPutPath=None, fontSize=10):
     aGraph = nx.nx_agraph.to_agraph(graph)
 
     for edge in aGraph.edges_iter():
-        edge.attr['label'] = '{0:.2f}A'.format(graph[edge[0]][edge[1]]["I"].real)
-
+        edge.attr['label'] = '{0:.2f} A \\n {1} ft \\n {2} AWG'.format(
+                              graph[edge[0]][edge[1]]["I"].real,
+                              graph[edge[0]][edge[1]]["length"],
+                              graph[edge[0]][edge[1]]["wireSize"])
+        # edge.attr['label'] = '{0:.2f}A \\n {1}ft'.format(
+        #                       graph[edge[0]][edge[1]]["I"].real,
+        #                       graph[edge[0]][edge[1]]["length"])
     for n in aGraph.nodes():
         i = aGraph.get_node(n)
         label = n
@@ -71,5 +76,5 @@ def draw_graph(graph, outPutPath=None, fontSize=10):
 
     aGraph.layout(prog='dot')
     aGraph.draw(outPutPath+'/System_Render.tiff')
-    # img = Image.open(dir_path+'output.png')
+    # img = Image.open(outPutPath+'/System_Render.tiff')
     # img.show()

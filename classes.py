@@ -88,4 +88,4 @@ class RadialPowerSystem(DiGraph):
         xL = wireDataDict[reactDict].get(wireSize)
         rL = wireDataDict[resistDict].get(wireSize)
         #Create a edge with appropriate attributes
-        self.add_edge(begNode, endNode, xL=xL, rL=rL, length=length)
+        self.add_edge(begNode, endNode, xL=xL, rL=rL, length=length, wireSize=wireSize)
