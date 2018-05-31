@@ -5,7 +5,7 @@ Created on Sun May 06 19:22:43 2018
 @author: AtotheM
 """
 import os
-dir_path = os.path.dirname(os.path.realpath(__file__))
+from datetime import datetime
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -75,6 +75,6 @@ def draw_graph(graph, outPutPath=None, fontSize=10):
         aGraph.edge_attr['fontsize'] = fontSize
 
     aGraph.layout(prog='dot')
-    aGraph.draw(outPutPath+'/System_Render.tiff')
+    aGraph.draw(outPutPath+'/{0}_Plot_{1}.tiff'.format(graph.name, datetime.now().strftime("%Y-%m-%d")))
     # img = Image.open(outPutPath+'/System_Render.tiff')
     # img.show()

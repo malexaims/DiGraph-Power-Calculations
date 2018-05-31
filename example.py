@@ -28,7 +28,7 @@ import matplotlib.pyplot as plt
 - Must instantiate a RadialPowerSystem object, then enter nodes and edges between the nodes for the program to function.
 """
 
-G = RadialPowerSystem()
+G = RadialPowerSystem("Service #1")
 
 G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0)
 G.add_node("DS5", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
@@ -78,9 +78,9 @@ G.add_node("MVDS_2", nomVLN=120, phase=1, w=10.0, vAr=0.0, nodeType="load")
 G.add_connection("PB4", "PB3", wireSize="1/0", conduitMat="PVC", length=1430.0)
 G.add_connection("PB3", "DS1_B", wireSize="1/0", conduitMat="PVC", length=10.0)
 G.add_connection("DS1_B", "XFMR3", wireSize="1/0", conduitMat="steel", length=5.0)
-G.add_connection("XFMR3", "PNL_A_1", wireSize=6, conduitMat="steel", length=1.0) #Fix length
-G.add_connection("PNL_A_1", "CCTV_2", wireSize=6, conduitMat="PVC", length=1.0) #Fix length
-G.add_connection("PNL_A_1", "MVDS_2", wireSize=6, conduitMat="PVC", length=1.0) #Fix length
+G.add_connection("XFMR3", "PNL_A_1", wireSize=6, conduitMat="steel", length=5.0) #Fix length
+G.add_connection("PNL_A_1", "CCTV_2", wireSize=6, conduitMat="PVC", length=50.0) #Fix length
+G.add_connection("PNL_A_1", "MVDS_2", wireSize=6, conduitMat="PVC", length=50.0) #Fix length
 
 
 G.add_node("PB4", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
@@ -95,17 +95,16 @@ G.add_connection("DS3_B", "XFMR4", wireSize="1/0", conduitMat="steel", length=5.
 G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 
 
-G1 = RadialPowerSystem()
-G1.add_node("1", nodeType="service", nomVoltage=480, phase=1, sscXfmrSec=75000.0)
-G1.add_node("2", nomVoltage=240, phase=1, w=2000.0, vAr=0.0, nodeType="load")
-G1.add_connection("1", "2", wireSize="1/0", conduitMat="PVC", length=1400.0)
+# G1 = RadialPowerSystem("Service #2")
+# G1.add_node("1", nodeType="service", nomVLL=480, phase=1, sscXfmrSec=75000.0)
+# G1.add_node("2", nomVLL=480, phase=1, w=2000.0, vAr=0.0, nodeType="load")
+# G1.add_connection("1", "2", wireSize="1/0", conduitMat="PVC", length=1400.0)
 
 
 #########################################################################################
 """Calculations"""
 #########################################################################################
 
-#After per unit implementation
 plot = True
 graphToCheck = G
 if __name__ == "__main__":
@@ -114,15 +113,6 @@ if __name__ == "__main__":
     calc_voltages_PU(graphToCheck)
     actual_conv(graphToCheck)
     calc_sym_ssc(graphToCheck)
-    # print graphToCheck.edges(data=True)
-    # for node, data in graphToCheck.nodes(data=True):
-    #     try:
-    #         print node, ":"
-    #         print "Voltage=", data["trueVoltage"]
-    #         print "SSC_LL=", data["SymSSC"]
-    #     except KeyError:
-    #         pass
-    # print graphToCheck.nodes(data=True)
+    print graphToCheck.name
     if plot:
-        # draw_graph_labels(graphToCheck)
         draw_graph(graphToCheck, dir_path, fontSize=15)

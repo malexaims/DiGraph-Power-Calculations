@@ -11,9 +11,10 @@ class RadialPowerSystem(DiGraph):
     radial power system."""
 
 
-    def __init__(self):
+    def __init__(self, name):
         super(RadialPowerSystem, self).__init__()
         self._serviceNode = None
+        self.name = name
 
 
     def add_connection(self, begNode, endNode, wireSize=None, wireMat='copper', conduitMat=None, length=None):
