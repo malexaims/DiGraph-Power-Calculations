@@ -17,7 +17,8 @@ def loop_check(calc_flows_function):
            nx.find_cycle(graph, orientation='ignore')
         except Exception:
             test = False
-        assert test == False, "Loop detected between nodes. Please correct."
+        if test != False:
+            raise Warning("Loop detected between nodes. Please correct.")
         return calc_flows_function(graph, **kwargs)
     return loop_check_wrapper
 

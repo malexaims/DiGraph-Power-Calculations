@@ -270,7 +270,7 @@ def calc_sym_ssc(graph):
         if i == serviceNode:
             continue
         length, path = nx.bidirectional_dijkstra(graph, serviceNode, i)
-        #TODO: Implement way to start with a starting SSC that sets a upstream system impedance
+        #TODO: Implement way to start with a starting SSC that sets a upstream system impedance...consider source X/R and available energy
         zSeriesPULL = sourceZPULL #Start with service impedance from source
         zSeriesPULN = sourceZPULN
         zEdgeSeriesPU = 0
@@ -314,8 +314,6 @@ def calc_sym_ssc(graph):
                     except KeyError:
                         pass
                     try:
-                        # zSeriesPULN = graph.node[i]["zSeriesPULN"] * 1.0 * (graph.node[i]["nomVLN"]*2 / graph.node[i]["nomVLN"])**2.0
-                        # graph.node[i]["SSC_LN"] = (1.0 / zSeriesPULN) * (sBase / graph.node[i]["nomVLN"])
                         graph.node[i]["SSC_LN"] = (1.0 / graph.node[i]["zSeriesPULN"]) * (sBase / graph.node[i]["nomVLN"])
                     except KeyError:
                         pass
