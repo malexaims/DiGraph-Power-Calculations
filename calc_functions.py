@@ -244,8 +244,8 @@ def calc_sym_ssc(graph):
     """Calculates the maximum symmetrical short circuit current at each node on the network using a point-to-point calculation procedure,
     starting from the "service" node then running down the digraph edges out to the load nodes. The series impedance from the
     "service" node to each other node on the network is used to calculate the short circuit current available. Determines and sets
-    single phase line to line faults for single phase nodes. Only function for symmetrical faults in three phase and single phase systems. Requires that the short circuit current avaliable is provided
-    for the secondary terminals of the service transformer.
+    single phase line to line faults for single phase nodes.Requires that the short circuit current avaliable is provided
+    for the secondary terminals of the service transformer and that the service is single phase or split phase center tapped.
     """
     wBase, vArBase = WBASE, VARBASE
     sBase = complex(wBase, vArBase)
@@ -303,6 +303,11 @@ def calc_sym_ssc(graph):
     for i in graph.nodes():
         if i == serviceNode:
             graph.node[i]["SSC_LL"] = graph.node[i]['sscXfmrSec']
+            try:
+                if graph.node[serviceNode]["phase"] == 1 and graph.node[serviceNode]["nomVLL"]*0.5 == graph.node[serviceNode]["nomVLN"] :
+                    graph.node[i]["SSC_LN"] = graph.node[i]['sscXfmrSec'] * 1.5
+            except KeyError:
+                pass
             continue
         if graph.node[i]["phase"] == 1:
             try:
