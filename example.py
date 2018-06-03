@@ -14,6 +14,7 @@ from checker_functions import over_voltage_check
 from plotting import *
 import networkx as nx
 from classes import RadialPowerSystem
+from report.reports import create_report
 import matplotlib.pyplot as plt
 
 
@@ -106,6 +107,7 @@ G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 #########################################################################################
 
 plot = True
+report = True
 graphToCheck = G
 if __name__ == "__main__":
     per_unit_conv(graphToCheck)
@@ -113,6 +115,8 @@ if __name__ == "__main__":
     calc_voltages_PU(graphToCheck)
     actual_conv(graphToCheck)
     calc_sym_ssc(graphToCheck)
-    print graphToCheck.name
+    print graphToCheck.edges(data=True)
     if plot:
-        draw_graph(graphToCheck, dir_path, fontSize=15)
+        draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
+    if report:
+        create_report(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop')
