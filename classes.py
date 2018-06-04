@@ -17,7 +17,7 @@ class RadialPowerSystem(DiGraph):
         self.name = name
 
 
-    def add_connection(self, begNode, endNode, wireSize=None, wireMat='copper', conduitMat=None, length=None):
+    def add_connection(self, begNode, endNode, wireSize=None, wireMat='copper', conduitMat=None, length=None, numWires=1):
         """Creates edge between two nodes representing a wire connection.
 
         Parameters
@@ -28,6 +28,7 @@ class RadialPowerSystem(DiGraph):
         wireMaterial = conductor material: copper or aluminum
         conduitMat = conduit material (PVC, aluminum, steel)
         length = wire length between nodes in feet
+        numWires = number of wires per phase
 
         Output
         ------
@@ -89,4 +90,4 @@ class RadialPowerSystem(DiGraph):
         xL = wireDataDict[reactDict].get(wireSize)
         rL = wireDataDict[resistDict].get(wireSize)
         #Create a edge with appropriate attributes
-        self.add_edge(begNode, endNode, xL=xL, rL=rL, length=length, wireSize=wireSize)
+        self.add_edge(begNode, endNode, xL=xL, rL=rL, length=length, wireSize=wireSize, numWires=numWires)

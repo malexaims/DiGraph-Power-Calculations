@@ -75,7 +75,8 @@ def per_unit_conv(graph):
             graph.node[i]["zPU"] = complex(-zPU.real,zPU.imag)
     #For edges
     for beg,end,data in graph.edges(data=True):
-        data["zPU"] = complex(((data["rL"] * data["length"])/1000.0), ((data["xL"] * data["length"])/1000.0)) / data["zBase"]
+        data["zPU"] = (complex(((data["rL"] * data["length"])/((1000.0 * data['numWires']))),
+                      (((data["xL"] * data["length"])/((1000.0 * data['numWires']))))) / data["zBase"])
     #Calculate the per unit current requirements of each load and transformer (power consumption)
     for i in graph.nodes():
         try:

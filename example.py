@@ -116,6 +116,7 @@ if __name__ == "__main__":
     actual_conv(graphToCheck)
     calc_sym_ssc(graphToCheck)
     print graphToCheck.edges(data=True)
+    print graphToCheck.nodes(data=True)
     if plot:
         draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
     if report:
