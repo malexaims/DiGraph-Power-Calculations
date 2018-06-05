@@ -72,7 +72,7 @@ def per_unit_conv(graph):
                   ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"])) /
                   graph.node[i]["nomPrimaryV"])**2.0)
 
-            graph.node[i]["zPU"] = complex(-zPU.real,zPU.imag)
+            graph.node[i]["zPU"] = complex(zPU.real,zPU.imag)
     #For edges
     for beg,end,data in graph.edges(data=True):
         data["zPU"] = (complex(((data["rL"] * data["length"])/((1000.0 * data['numWires']))),
