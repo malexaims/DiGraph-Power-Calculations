@@ -118,6 +118,6 @@ if __name__ == "__main__":
     print graphToCheck.edges(data=True)
     print graphToCheck.nodes(data=True)
     if plot:
-        draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
+        draw_graph(graphToCheck, outPutPath='C:\Users\Alex\Desktop', fontSize=15)
     if report:
-        create_report(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop')
+        create_report(graphToCheck, outPutPath='C:\Users\Alex\Desktop')
