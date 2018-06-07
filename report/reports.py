@@ -22,7 +22,7 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
         vDrop = '{0.real:.1f}'.format(data['vDrop'])
         I = '{0.real:.1f}'.format(data['I'])
         edgeDict = {'from':beg, 'to':end, 'length':data['length'], 'I':I, 'vDrop':vDrop,
-                    'wireSize':data['wireSize'], 'numWires':data['numWires']}
+                    'wireSize':data['wireSize'], 'numWires':data['numWires'], 'Ifloat': data['I']}
         edgeData.append(edgeDict)
 
     nodeData = []
@@ -32,15 +32,16 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
             nomVoltage = data['nomPrimaryV']
             trueVoltage = '{0.real:.1f}'.format(data['primaryVoltage'])
             pctVdrop = '--'
+            pctVdropFloat = 0.0
         else:
             nomVoltage = get_node_voltage(graph, n)
             trueVoltage = data["trueVoltage"]
-            pctVdrop = 100.0 * (nomVoltage - trueVoltage) / nomVoltage
-            pctVdrop = '{0.real:.1f}'.format(pctVdrop)
+            pctVdropFloat = 100.0 * (nomVoltage - trueVoltage) / nomVoltage
+            pctVdrop = '{0.real:.1f}'.format(pctVdropFloat)
             trueVoltage = '{0.real:.1f}'.format(trueVoltage)
 
         nodeDict = {'name':n, 'nomVoltage':nomVoltage, 'trueVoltage':trueVoltage,
-                    'pctVdrop':pctVdrop, 'dateTime':dateTime}
+                    'pctVdrop':pctVdrop, 'dateTime':dateTime, 'pctVdropFloat': pctVdropFloat}
 
         try:
             kVA = math.sqrt(data['w']**2 + data['vAr'])/1000.0
@@ -61,10 +62,8 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
 
         nodeData.append(nodeDict)
 
-    tmpEdgeData = sorted(edgeData, key=lambda k: k['I'])
-    edgeData = tmpEdgeData
-    tmpNodeData = sorted(nodeData, key=lambda k: k['pctVdrop'], reverse=True)
-    nodeData = tmpNodeData
+    edgeData = sorted(edgeData[:], key=lambda k: k['Ifloat'].real, reverse=True)
+    nodeData = sorted(nodeData[:], key=lambda k: k['pctVdropFloat'].real, reverse=True)
 
     if outPutPath == None:
         raise Exception("OutPutPath not set")
