@@ -7,6 +7,10 @@ sys.path.insert(0,parentdir)
 import calc_functions
 from classes import RadialPowerSystem
 
+#TODO: Test that vdrop accross transformer is less than the base turns ratio
+
+#TODO: Test that the ssc on secondary of XFMR is always less than the base turns ratio
+
 
 class CheckerFunctionTestCase(unittest.TestCase):
 

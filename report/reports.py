@@ -1,4 +1,5 @@
 import networkx as nx
+import math
 import os,sys,inspect
 from datetime import datetime
 from appy.pod.renderer import Renderer
@@ -30,7 +31,7 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
         if data['nodeType'] == 'transformer':
             nomVoltage = data['nomPrimaryV']
             trueVoltage = '{0.real:.1f}'.format(data['primaryVoltage'])
-            pctVdrop = 'N/A'
+            pctVdrop = '--'
         else:
             nomVoltage = get_node_voltage(graph, n)
             trueVoltage = data["trueVoltage"]
@@ -38,18 +39,24 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
             pctVdrop = '{0.real:.1f}'.format(pctVdrop)
             trueVoltage = '{0.real:.1f}'.format(trueVoltage)
 
-        nodeDict = {'name':n, 'nodeType':data['nodeType'], 'nomVoltage':nomVoltage, 'trueVoltage':trueVoltage,
+        nodeDict = {'name':n, 'nomVoltage':nomVoltage, 'trueVoltage':trueVoltage,
                     'pctVdrop':pctVdrop, 'dateTime':dateTime}
+
+        try:
+            kVA = math.sqrt(data['w']**2 + data['vAr'])/1000.0
+            nodeDict['kVA'] = kVA
+        except KeyError:
+            nodeDict['kVA'] = '--'
 
         try:
             nodeDict['SSC_LL'] = '{0.real:.1f}'.format(data['SSC_LL'])
         except KeyError:
-            nodeDict['SSC_LL'] = 'N/A'
+            nodeDict['SSC_LL'] = '--'
             pass
         try:
             nodeDict['SSC_LN'] = '{0.real:.1f}'.format(data['SSC_LN'])
         except KeyError:
-            nodeDict['SSC_LN'] = 'N/A'
+            nodeDict['SSC_LN'] = '--'
             pass
 
         nodeData.append(nodeDict)
