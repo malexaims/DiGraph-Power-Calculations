@@ -89,3 +89,18 @@ def over_voltage_check(graph, allowableOverVoltage=10.0): #TODO: make allowableO
     if len(incompatList) > 0:
             raise ValueError("The following nodes are recieving overvoltages in excess of permitted limits:", incompatList)
     return
+
+
+def neg_vAr_check(calc_flows_function):
+    """Function to test if there are any loads with negative vAr (leading power factor). The program
+    is not written to handle these type of loads currently.
+    """
+    def neg_vAr_check_wrapper(graph, **kwargs):
+        for i, data in graph.node(data=True):
+            try:
+                if data['vAr'] < 0:
+                    raise ValueError("Negative vAr input for node {0}. Program cannot currently handle leading power factors.".format(i))
+            except KeyError:
+                continue
+        return calc_flows_function(graph, **kwargs)
+    return neg_vAr_check_wrapper

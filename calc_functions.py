@@ -7,7 +7,7 @@ Created on Sun Aug 06 07:53:19 2017
 
 import networkx as nx
 import math
-from checker_functions import loop_check, length_check, voltage_check
+from checker_functions import loop_check, length_check, voltage_check, neg_vAr_check
 from helper_functions import get_node_voltage
 from constants import WBASE, VARBASE
 
@@ -92,6 +92,7 @@ def per_unit_conv(graph):
 @loop_check
 @length_check
 @voltage_check
+@neg_vAr_check
 def calc_flows_PU(graph, debug=False):
     """Calculates the per unit load flow on each edge for the entire graph, then assigns the value to the edges
     as the 'w' and 'vArPU' attribuite. Also calculates the total load required at the service point, then assigns these
@@ -104,16 +105,16 @@ def calc_flows_PU(graph, debug=False):
         if graph.node[i]["nodeType"] == "service":
             pass
         try:
-            wPUTotal += graph.node[i]["wPU"]
-            vArPUTotal += graph.node[i]["vArPU"]
+            wPUTotal -= graph.node[i]["wPU"]
+            vArPUTotal -= graph.node[i]["vArPU"]
         except KeyError:
             pass
     for i in graph.nodes():
     #Find the service node and set the total per unit current
         try:
             if graph.node[i]["nodeType"] == "service":
-                graph.node[i]["wPU"] = -wPUTotal
-                graph.node[i]["vArPU"] = -vArPUTotal
+                graph.node[i]["wPU"] = wPUTotal
+                graph.node[i]["vArPU"] = vArPUTotal
                 graph.node[i]["trueVoltagePU"] = 1.0 #Service PU voltage will always be 1
         except KeyError:
             pass
