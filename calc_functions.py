@@ -11,6 +11,7 @@ from checker_functions import loop_check, length_check, voltage_check
 from helper_functions import get_node_voltage
 from constants import WBASE, VARBASE
 
+#TODO: Currently only supports lagging power factors on loads (positive vAr). Find a way to implement leading power factor. Need to fix the flow direction from source.
 
 #TODO: Currently transformers need to have nomSecondaryV2 and nomSecondaryV1. Fix to only require V1 for transformers
 #with single voltage outputs. Can this be accomplished when inputting transformer data?
@@ -72,7 +73,7 @@ def per_unit_conv(graph):
                   ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"])) /
                   graph.node[i]["nomPrimaryV"])**2.0)
 
-            graph.node[i]["zPU"] = complex(-zPU.real,zPU.imag)
+            graph.node[i]["zPU"] = complex(-zPU.real,-zPU.imag)
     #For edges
     for beg,end,data in graph.edges(data=True):
         data["zPU"] = (complex(((data["rL"] * data["length"])/((1000.0 * data['numWires']))),

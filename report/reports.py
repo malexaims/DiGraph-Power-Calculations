@@ -20,7 +20,7 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
     edgeData = []
     for beg, end, data in graph.edges(data=True):
         vDrop = '{0.real:.1f}'.format(data['vDrop'])
-        I = '{0.real:.1f}'.format(data['I'])
+        I = '{0:.1f}'.format(math.sqrt(data['I'].real**2+data["I"].imag**2))
         edgeDict = {'from':beg, 'to':end, 'length':data['length'], 'I':I, 'vDrop':vDrop,
                     'wireSize':data['wireSize'], 'numWires':data['numWires'], 'Ifloat': data['I']}
         edgeData.append(edgeDict)

@@ -6,6 +6,7 @@ Created on Sun May 06 19:22:43 2018
 """
 import os
 from datetime import datetime
+import math
 
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -28,7 +29,7 @@ def draw_graph(graph, outPutPath=None, fontSize=10):
 
     for edge in aGraph.edges_iter():
         edge.attr['label'] = '{0:.2f} A \\n {1} ft \\n {2} AWG'.format(
-                              graph[edge[0]][edge[1]]["I"].real,
+                              math.sqrt(graph[edge[0]][edge[1]]["I"].real**2 + graph[edge[0]][edge[1]]["I"].imag**2),
                               graph[edge[0]][edge[1]]["length"],
                               graph[edge[0]][edge[1]]["wireSize"])
         # edge.attr['label'] = '{0:.2f}A \\n {1}ft'.format(

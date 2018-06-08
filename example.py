@@ -107,7 +107,7 @@ G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 #########################################################################################
 
 plot = True
-report = True
+report = False
 graphToCheck = G
 if __name__ == "__main__":
     per_unit_conv(graphToCheck)
