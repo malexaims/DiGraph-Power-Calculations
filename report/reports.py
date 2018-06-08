@@ -44,7 +44,7 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
                     'pctVdrop':pctVdrop, 'dateTime':dateTime, 'pctVdropFloat': pctVdropFloat}
 
         try:
-            kVA = math.sqrt(data['w']**2 + data['vAr'])/1000.0
+            kVA = math.sqrt(data['w']**2 + data['vAr']**2)/1000.0
             nodeDict['kVA'] = kVA
         except KeyError:
             nodeDict['kVA'] = '--'
