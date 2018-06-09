@@ -232,8 +232,8 @@ def calc_voltages_PU(graph):
         segment_vdrop_PU(graph, i[0], i[1])
 
 
-def calc_sym_ssc(graph):
-    #NOTE: Have to reverse transformer and conductor reactance for SSC to function correctly. Hence multiplaction by -1.0.
+def calc_sym_ssc(graph, xRRatio=10.0):
+    #NOTE: Have to reverse vArBase for SSC to function correctly. Hence multiplaction by -1.0.
     #TODO: Update docstring when functionality is expanded.... L-G faults and three-phase systems
     """Calculates the maximum symmetrical short circuit current at each node on the network using a point-to-point calculation procedure,
     starting from the "service" node then running down the digraph edges out to the load nodes. The series impedance from the
@@ -242,14 +242,27 @@ def calc_sym_ssc(graph):
     for the secondary terminals of the service transformer and that the service is single phase or split phase center tapped.
     """
     wBase, vArBase = WBASE, VARBASE
-    sBase = complex(wBase, vArBase)
+    sBase = complex(wBase, vArBase * -1.0)
     serviceNode = graph.get_service_node()
+
+    try:
+        xRRatio = graph.node[serviceNode]['xRRatio']
+    except KeyError:
+        pass #Default X/R assumption unless otherwise set
 
     try:
         serviceVoltage = get_node_voltage(graph, serviceNode)
         zBase = (serviceVoltage**2.0) / sBase
-        sourceZPULL = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]) / zBase
-        sourceZPULN = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]*1.5) / zBase #TODO: Find better way... this is rough assumption
+        zPULL = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]) / abs(zBase)
+        zPULN = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]*1.5) / abs(zBase) #TODO: Find better way... this is rough assumption
+
+        sourceXPULL = math.sin(math.atan(xRRatio)) * zPULL
+        sourceXPULN = math.sin(math.atan(xRRatio)) * zPULN
+        sourceRPULL = math.cos(math.atan(xRRatio)) * zPULL
+        sourceRPULN = math.cos(math.atan(xRRatio)) * zPULN
+        sourceZPULL= complex(sourceRPULL, -1.0 * sourceXPULL) #Lagging source impedance
+        sourceZPULN= complex(sourceRPULN, -1.0 * sourceXPULN) #Lagging source impedance
+
     except KeyError:
         print ("""Missing input data for service node. Unable to perform short circuit current calculations.
                   Avaliable short circuit current on secondary of service transformer.""")
@@ -268,7 +281,7 @@ def calc_sym_ssc(graph):
             if not graph.node[path[j]]["phase"] == 1: #TODO: Remove once software can calculate three phase fault currents.
                 raise Exception("calc_sym_ssc() only works for single phase systems currently")
             try:
-                zEdgeSeriesPU += 2.0 * complex(graph[path[j]][path[j+1]]["zPU"].real, graph[path[j]][path[j+1]]["zPU"].imag*-1.0) #Mutiply by 2 for return impedance of conductors
+                zEdgeSeriesPU += 2.0 * graph[path[j]][path[j+1]]["zPU"] #Mutiply by 2 for return impedance of conductors
             except KeyError:
                 print "zPU not set for edge between {0} and {1}".format(path[j], path[j+1])
         #If transformer is on the path add that to the series Impedance
@@ -276,18 +289,17 @@ def calc_sym_ssc(graph):
         #TODO: Only works for single phase center tapped systems... consider setting ratio from upstream transformer or service whatever is closer
         #Convert to base voltage for L-N from L-L base
         zSeriesPULN += zEdgeSeriesPU * 1.0 * ((2 / 1)**2.0)
-
         for y in path:
             if graph.node[y]["nodeType"] == "transformer":
                 try:
-                    zSeriesPULL += complex(graph.node[y]["zPU"].real, graph.node[y]["zPU"].imag*-1.0)
-                    zSeriesPULN += complex(graph.node[y]["zPU"].real*1.5, graph.node[y]["zPU"].imag*-1.2)
+                    zSeriesPULL += graph.node[y]["zPU"]
+                    zSeriesPULN += graph.node[y]["zPU"] * 1.5 #TODO: Find better way... this is rough assumption
                 except KeyError:
                     print "zPU not set for transformer {0}".format(y)
         #If transformer is the node where zSeriesPU is being set, dont include that transformers impedance (ssc at primary)
         if graph.node[i]["nodeType"] == "transformer":
-                graph.node[i]["zSeriesPULL"] = zSeriesPULL - complex(graph.node[i]["zPU"].real, graph.node[i]["zPU"].imag*-1.0)
-                graph.node[i]["zSeriesPULN"] = zSeriesPULN - complex(graph.node[i]["zPU"].real*1.5, graph.node[i]["zPU"].imag*-1.2)
+                graph.node[i]["zSeriesPULL"] = zSeriesPULL - graph.node[i]["zPU"]
+                graph.node[i]["zSeriesPULN"] = zSeriesPULN - graph.node[y]["zPU"] * 1.5 #TODO: Find better way... this is rough assumption
                 continue
 
         graph.node[i]["zSeriesPULL"] = zSeriesPULL
@@ -298,7 +310,7 @@ def calc_sym_ssc(graph):
             graph.node[i]["SSC_LL"] = graph.node[i]['sscXfmrSec']
             try:
                 if graph.node[serviceNode]["phase"] == 1 and graph.node[serviceNode]["nomVLL"]*0.5 == graph.node[serviceNode]["nomVLN"] :
-                    graph.node[i]["SSC_LN"] = graph.node[i]['sscXfmrSec'] * 1.5
+                    graph.node[i]["SSC_LN"] = graph.node[i]['sscXfmrSec'] * 1.5  #TODO: Find better way... this is rough assumption
             except KeyError:
                 pass
             continue

@@ -31,14 +31,14 @@ import matplotlib.pyplot as plt
 
 G = RadialPowerSystem("Service #1")
 
-G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0, xRRatio=15)
+G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0, xRRatio=10.0)
 G.add_node("DS5", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
 G.add_connection("service_xfmr", "DS5", wireSize="1/0", conduitMat="PVC", length=25.0)
 
 
 G.add_node("PB1", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
 G.add_node("DS1_A", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
-G.add_node("XFMR1", phase=1, pctR=2.0, pctX=30.0, tapSetting=0.0, rating=7.5,
+G.add_node("XFMR1", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.0, rating=7.5,
            nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
            nodeType="transformer")
 G.add_node("PNL_A", phase=1, nodeType="bus", nomVLL=240, nomVLN=120)
@@ -47,7 +47,7 @@ G.add_node("MVDS_1", nomVLN=120, phase=1, w=10.0, vAr=0.0, nodeType="load")
 G.add_connection("DS5", "PB1", wireSize="1/0", conduitMat="PVC", length=10.0)
 G.add_connection("PB1", "DS1_A", wireSize="1/0", conduitMat="PVC", length=10.0)
 G.add_connection("DS1_A", "XFMR1", wireSize="1/0", conduitMat="steel", length=5.0)
-G.add_connection("XFMR1", "PNL_A", wireSize=6, conduitMat="steel", length=0.001)
+G.add_connection("XFMR1", "PNL_A", wireSize=6, conduitMat="steel", length=5.0)
 G.add_connection("PNL_A", "CCTV_1", wireSize=6, conduitMat="PVC", length=65.0)
 G.add_connection("PNL_A", "MVDS_1", wireSize=6, conduitMat="PVC", length=65.0)
 
@@ -58,7 +58,7 @@ G.add_node("XFMR2", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.0, rating=15.0,
            nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
            nodeType="transformer")
 G.add_node("PNL_B", phase=1, nodeType="bus", nomVLL=240, nomVLN=120)
-G.add_node("DMS_1", nomVLL=240, phase=1, w=7000.0, vAr=0.0, nodeType="load")
+G.add_node("DMS_1", nomVLL=240, phase=1, w=7000.0, vAr=7000.0, nodeType="load")
 G.add_node("MCCTV_1", nomVLN=120, phase=1, w=104.0, vAr=0.0, nodeType="load")
 G.add_connection("PB1", "PB2", wireSize="1/0", conduitMat="PVC", length=1800.0)
 G.add_connection("PB2", "DS3_A", wireSize="1/0", conduitMat="PVC", length=10.0)
@@ -107,7 +107,7 @@ G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 #########################################################################################
 
 plot = True
-report = False
+report = True
 graphToCheck = G
 if __name__ == "__main__":
     per_unit_conv(graphToCheck)
@@ -115,8 +115,8 @@ if __name__ == "__main__":
     calc_voltages_PU(graphToCheck)
     actual_conv(graphToCheck)
     calc_sym_ssc(graphToCheck)
-    print graphToCheck.edges(data=True)
-    print graphToCheck.nodes(data=True)
+    # print graphToCheck.edges(data=True)
+    # print graphToCheck.nodes(data=True)
     if plot:
         draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
     if report:
