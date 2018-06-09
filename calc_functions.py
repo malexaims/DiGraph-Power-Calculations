@@ -69,15 +69,15 @@ def per_unit_conv(graph):
         #For transformers
         if graph.node[i]["nodeType"] == "transformer":
 
-            zPU = (complex(graph.node[i]["pctR"]/100.0,graph.node[i]["pctX"]/100.0) * (sBase / (graph.node[i]["rating"]*1000.0)) *
+            zPU = (complex(graph.node[i]["pctR"]/100.0, -graph.node[i]["pctX"]/100.0) * (sBase / (graph.node[i]["rating"]*1000.0)) *
                   ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"])) /
                   graph.node[i]["nomPrimaryV"])**2.0)
 
-            graph.node[i]["zPU"] = complex(-zPU.real,-zPU.imag)
+            graph.node[i]["zPU"] = complex(zPU.real, zPU.imag)
     #For edges
     for beg,end,data in graph.edges(data=True):
         data["zPU"] = (complex(((data["rL"] * data["length"])/((1000.0 * data['numWires']))),
-                      (((data["xL"] * data["length"])/((1000.0 * data['numWires']))))) / data["zBase"])
+                      (((data["xL"] * data["length"] * -1.0)/((1000.0 * data['numWires']))))) / data["zBase"])
     #Calculate the per unit current requirements of each load and transformer (power consumption)
     for i in graph.nodes():
         try:
@@ -190,10 +190,9 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
     edge["IPU"] = IPU
     #Calculate round-trip voltage drop along edge
     if phaseEnd == 1:
-        #Reactance must be negative for voltage drop to work correctly
-        vDropPU = complex(IPU.real,-IPU.imag) * zPU * 2.0
+        vDropPU = complex(IPU.real, IPU.imag) * zPU * 2.0
     elif phaseEnd == 3:
-        vDropPU = math.sqrt(3) * complex(IPU.real,-IPU.imag) * zPU
+        vDropPU = math.sqrt(3) * complex(IPU.real, IPU.imag) * zPU
     else:
         raise ValueError("Phase value for edge must be 1 or 3")
     assert vDropPU.real < 1.0, ("Segment voltge drop exceeds starting voltage between {0} and {1}."
@@ -243,6 +242,7 @@ def calc_voltages_PU(graph):
 
 
 def calc_sym_ssc(graph):
+    #NOTE: Have to reverse transformer and conductor reactance for SSC to function correctly. Hence multiplaction by -1.0.
     #TODO: Update docstring when functionality is expanded.... L-G faults and three-phase systems
     """Calculates the maximum symmetrical short circuit current at each node on the network using a point-to-point calculation procedure,
     starting from the "service" node then running down the digraph edges out to the load nodes. The series impedance from the
@@ -282,24 +282,28 @@ def calc_sym_ssc(graph):
             if not graph.node[path[j]]["phase"] == 1: #TODO: Remove once software can calculate three phase fault currents.
                 raise Exception("calc_sym_ssc() only works for single phase systems currently")
             try:
-                zEdgeSeriesPU += 2.0 * graph[path[j]][path[j+1]]["zPU"] #Mutiply by 2 for return impedance of conductors
+                zEdgeSeriesPU += 2.0 * complex(graph[path[j]][path[j+1]]["zPU"].real, graph[path[j]][path[j+1]]["zPU"].imag*-1.0) #Mutiply by 2 for return impedance of conductors
             except KeyError:
                 print "zPU not set for edge between {0} and {1}".format(path[j], path[j+1])
         #If transformer is on the path add that to the series Impedance
         zSeriesPULL += zEdgeSeriesPU
-        zSeriesPULN += zEdgeSeriesPU * 1.0 * ((2 / 1)**2.0) #TODO: Only works for single phase center tapped systems... consider setting ratio from upstream transformer or service whatever is closer
+        #TODO: Only works for single phase center tapped systems... consider setting ratio from upstream transformer or service whatever is closer
+        #Convert to base voltage for L-N from L-L base
+        zSeriesPULN += zEdgeSeriesPU * 1.0 * ((2 / 1)**2.0)
+
         for y in path:
             if graph.node[y]["nodeType"] == "transformer":
                 try:
-                    zSeriesPULL += graph.node[y]["zPU"]
-                    zSeriesPULN += complex(graph.node[y]["zPU"].real*1.5, graph.node[y]["zPU"].imag*1.2)
+                    zSeriesPULL += complex(graph.node[y]["zPU"].real, graph.node[y]["zPU"].imag*-1.0)
+                    zSeriesPULN += complex(graph.node[y]["zPU"].real*1.5, graph.node[y]["zPU"].imag*-1.2)
                 except KeyError:
                     print "zPU not set for transformer {0}".format(y)
         #If transformer is the node where zSeriesPU is being set, dont include that transformers impedance (ssc at primary)
         if graph.node[i]["nodeType"] == "transformer":
-                graph.node[i]["zSeriesPULL"] = zSeriesPULL - graph.node[i]["zPU"]
-                graph.node[i]["zSeriesPULN"] = zSeriesPULN - complex(graph.node[i]["zPU"].real*1.5, graph.node[i]["zPU"].imag*1.2)
+                graph.node[i]["zSeriesPULL"] = zSeriesPULL - complex(graph.node[y]["zPU"].real, graph.node[y]["zPU"].imag*-1.0)
+                graph.node[i]["zSeriesPULN"] = zSeriesPULN - complex(graph.node[y]["zPU"].real*1.5, graph.node[y]["zPU"].imag*-1.2)
                 continue
+
         graph.node[i]["zSeriesPULL"] = zSeriesPULL
         graph.node[i]["zSeriesPULN"] = zSeriesPULN
 

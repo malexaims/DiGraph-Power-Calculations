@@ -47,7 +47,7 @@ G.add_node("MVDS_1", nomVLN=120, phase=1, w=10.0, vAr=0.0, nodeType="load")
 G.add_connection("DS5", "PB1", wireSize="1/0", conduitMat="PVC", length=10.0)
 G.add_connection("PB1", "DS1_A", wireSize="1/0", conduitMat="PVC", length=10.0)
 G.add_connection("DS1_A", "XFMR1", wireSize="1/0", conduitMat="steel", length=5.0)
-G.add_connection("XFMR1", "PNL_A", wireSize=6, conduitMat="steel", length=5.0)
+G.add_connection("XFMR1", "PNL_A", wireSize=6, conduitMat="steel", length=0.001)
 G.add_connection("PNL_A", "CCTV_1", wireSize=6, conduitMat="PVC", length=65.0)
 G.add_connection("PNL_A", "MVDS_1", wireSize=6, conduitMat="PVC", length=65.0)
 
@@ -107,7 +107,7 @@ G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 #########################################################################################
 
 plot = True
-report = False
+report = True
 graphToCheck = G
 if __name__ == "__main__":
     per_unit_conv(graphToCheck)
