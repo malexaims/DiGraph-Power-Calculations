@@ -101,23 +101,18 @@ def calc_flows_PU(graph, debug=False):
     #Sum total per unit current of the system
     wPUTotal = 0
     vArPUTotal = 0
+    serviceNode = graph.get_service_node()
     for i in graph.nodes():
-        if graph.node[i]["nodeType"] == "service":
+        if i == serviceNode:
             pass
         try:
             wPUTotal -= graph.node[i]["wPU"]
             vArPUTotal -= graph.node[i]["vArPU"]
         except KeyError:
             pass
-    for i in graph.nodes():
-    #Find the service node and set the total per unit current
-        try:
-            if graph.node[i]["nodeType"] == "service":
-                graph.node[i]["wPU"] = wPUTotal
-                graph.node[i]["vArPU"] = vArPUTotal
-                graph.node[i]["trueVoltagePU"] = 1.0 #Service PU voltage will always be 1
-        except KeyError:
-            pass
+    graph.node[serviceNode]["wPU"] = wPUTotal
+    graph.node[serviceNode]["vArPU"] = vArPUTotal
+    graph.node[serviceNode]["trueVoltagePU"] = 1.0 #Service PU voltage will always be 1
     #Create dict of real flow between network nodes
     wFlowsDict = nx.network_simplex(graph, demand="wPU")[1]
     #Assign per unit to each edge in the graph
@@ -145,6 +140,7 @@ def actual_conv(graph):
     """Converts a eletrical network from the per unit system to actual values.
     """
     #Calculate actual vDrop and current on each edge
+    serviceNode = graph.get_service_node()
     for beg,end,data in graph.edges(data=True):
         data["vDrop"] = data["vDropPU"] * data["vBase"]
         if graph.node[end]["phase"] == 3:
@@ -153,7 +149,7 @@ def actual_conv(graph):
             data["I"] = data["IPU"] * (data["vBase"]/data["zBase"])
     #Calculate actual voltage at each node
     for i in graph.nodes():
-        if graph.node[i]["nodeType"] == "service":
+        if i == serviceNode:
             pass
         if graph.node[i]["nodeType"] == "transformer":
             graph.node[i]["primaryVoltage"] = graph.node[i]["primaryVoltagePU"] * graph.node[i]["nomPrimaryV"]
@@ -228,12 +224,7 @@ def calc_voltages_PU(graph):
     tree of the graph structure. The segment_vdrop_PU function is used to calculate the per unit voltage drop along
     each edge, set edge per unit currents, and to assign the trueVoltagePU to each node.
     """
-    #Find the serviceNode
-    serviceNode = None
-    for i in graph.nodes():
-        if graph.in_degree(i) == 0:
-            serviceNode = i
-            break
+    serviceNode = graph.get_service_node()
     #Oriented tree structure of digraph starting at serviceNode
     graphStructure = nx.edge_dfs(graph, source=serviceNode)
     #Calculate voltages starting at source and working towards loads
@@ -252,12 +243,7 @@ def calc_sym_ssc(graph):
     """
     wBase, vArBase = WBASE, VARBASE
     sBase = complex(wBase, vArBase)
-    serviceNode = None
-
-    for i in graph.nodes():
-        if graph.in_degree(i) == 0:
-            serviceNode = i
-            break
+    serviceNode = graph.get_service_node()
 
     try:
         serviceVoltage = get_node_voltage(graph, serviceNode)
@@ -300,8 +286,8 @@ def calc_sym_ssc(graph):
                     print "zPU not set for transformer {0}".format(y)
         #If transformer is the node where zSeriesPU is being set, dont include that transformers impedance (ssc at primary)
         if graph.node[i]["nodeType"] == "transformer":
-                graph.node[i]["zSeriesPULL"] = zSeriesPULL - complex(graph.node[y]["zPU"].real, graph.node[y]["zPU"].imag*-1.0)
-                graph.node[i]["zSeriesPULN"] = zSeriesPULN - complex(graph.node[y]["zPU"].real*1.5, graph.node[y]["zPU"].imag*-1.2)
+                graph.node[i]["zSeriesPULL"] = zSeriesPULL - complex(graph.node[i]["zPU"].real, graph.node[i]["zPU"].imag*-1.0)
+                graph.node[i]["zSeriesPULN"] = zSeriesPULN - complex(graph.node[i]["zPU"].real*1.5, graph.node[i]["zPU"].imag*-1.2)
                 continue
 
         graph.node[i]["zSeriesPULL"] = zSeriesPULL

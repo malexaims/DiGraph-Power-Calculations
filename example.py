@@ -31,14 +31,14 @@ import matplotlib.pyplot as plt
 
 G = RadialPowerSystem("Service #1")
 
-G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0)
+G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0, xRRatio=15)
 G.add_node("DS5", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
 G.add_connection("service_xfmr", "DS5", wireSize="1/0", conduitMat="PVC", length=25.0)
 
 
 G.add_node("PB1", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
 G.add_node("DS1_A", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
-G.add_node("XFMR1", phase=1, pctR=2.0, pctX=3.0, tapSetting=0.0, rating=7.5,
+G.add_node("XFMR1", phase=1, pctR=2.0, pctX=30.0, tapSetting=0.0, rating=7.5,
            nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
            nodeType="transformer")
 G.add_node("PNL_A", phase=1, nodeType="bus", nomVLL=240, nomVLN=120)
@@ -107,7 +107,7 @@ G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 #########################################################################################
 
 plot = True
-report = True
+report = False
 graphToCheck = G
 if __name__ == "__main__":
     per_unit_conv(graphToCheck)

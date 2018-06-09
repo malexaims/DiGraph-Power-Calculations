@@ -91,3 +91,13 @@ class RadialPowerSystem(DiGraph):
         rL = wireDataDict[resistDict].get(wireSize)
         #Create a edge with appropriate attributes
         self.add_edge(begNode, endNode, xL=xL, rL=rL, length=length, wireSize=wireSize, numWires=numWires)
+
+
+    def get_service_node(self):
+        if self._serviceNode == None:
+            for i in self.nodes():
+                if self.in_degree(i) == 0 and self.node[i]['nodeType'] == 'service':
+                    self._serviceNode = i
+                    return i
+        else:
+            return self._serviceNode
