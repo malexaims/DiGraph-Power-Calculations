@@ -76,6 +76,7 @@ def draw_graph(graph, outPutPath=None, fontSize=10):
         aGraph.edge_attr['fontsize'] = fontSize
 
     aGraph.layout(prog='dot')
-    aGraph.draw(outPutPath+'/{0}_Plot_{1}.tiff'.format(graph.name, datetime.now().strftime("%Y-%m-%d")))
+    # aGraph.draw(outPutPath+'/{0}_Plot_{1}.png'.format(graph.name, datetime.now().strftime("%Y-%m-%d")))
+    aGraph.draw(outPutPath)
     # img = Image.open(outPutPath+'/System_Render.tiff')
     # img.show()

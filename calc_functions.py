@@ -26,8 +26,6 @@ from constants import WBASE, VARBASE
 
 #TODO: Need to account for three phase faults and single phase L-G faults to expand SSC calculations.
 
-#TODO: Add conversion of fault current from PU to actual.
-
 #TODO: Figure out if voltage drop accross transformer is working when a single phase load is connected to a three phase transformer secondaryVoltage
 
 #TODO: Need to check if three-phase and single phase load mixtures are being properly addressed
@@ -70,7 +68,7 @@ def per_unit_conv(graph):
         if graph.node[i]["nodeType"] == "transformer":
 
             zPU = (complex(graph.node[i]["pctR"]/100.0, -graph.node[i]["pctX"]/100.0) * (sBase / (graph.node[i]["rating"]*1000.0)) *
-                  ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"])) /
+                  ((graph.node[i]["nomPrimaryV"] - (graph.node[i]["nomPrimaryV"] * graph.node[i]["tapSetting"]/100.0)) /
                   graph.node[i]["nomPrimaryV"])**2.0)
 
             graph.node[i]["zPU"] = complex(zPU.real, zPU.imag)
@@ -207,7 +205,7 @@ def segment_vdrop_PU(graph, sourceNode, endNode):
             successor node.""")
 
         graph.node[endNode]["secondaryVoltagePU"] = ((graph.node[endNode]["primaryVoltagePU"] -
-                                                    (graph.node[endNode]["primaryVoltagePU"] * graph.node[endNode]["tapSetting"])) -
+                                                    (graph.node[endNode]["primaryVoltagePU"] * graph.node[endNode]["tapSetting"]/100.0)) -
                                                     (IPU * graph.node[endNode]["zPU"])) #TODO: Fix for transformers with two voltage secondaries... does this even need to be handled?
         return
     if graph.node[sourceNode]["nodeType"] == "transformer":

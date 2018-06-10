@@ -9,10 +9,11 @@ sys.path.insert(0,parentdir)
 import calc_functions
 from helper_functions import get_node_voltage
 from classes import RadialPowerSystem
+import plotting as plt
 
 
 
-def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
+def create_report(graph, outPutPath=None, templateName="reportTemplate.ods", plotting=False, pltFontSize=15):
 
     systemName = graph.name
     dateTime = '{}'.format(datetime.now())
@@ -21,8 +22,10 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
     for beg, end, data in graph.edges(data=True):
         vDrop = '{0.real:.1f}'.format(data['vDrop'])
         I = '{0:.1f}'.format(math.sqrt(data['I'].real**2+data["I"].imag**2))
+
         edgeDict = {'from':beg, 'to':end, 'length':data['length'], 'I':I, 'vDrop':vDrop,
                     'wireSize':data['wireSize'], 'numWires':data['numWires'], 'Ifloat': data['I']}
+
         edgeData.append(edgeDict)
 
     nodeData = []
@@ -44,8 +47,8 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
                     'pctVdrop':pctVdrop, 'dateTime':dateTime, 'pctVdropFloat': pctVdropFloat}
 
         try:
-            kVA = math.sqrt(data['w']**2 + data['vAr']**2)/1000.0
-            nodeDict['kVA'] = kVA
+            kVA = math.sqrt(data['w']**2.0 + data['vAr']**2.0)/1000.0
+            nodeDict['kVA'] = '{0:.2f}'.format(kVA)
         except KeyError:
             nodeDict['kVA'] = '--'
 
@@ -62,13 +65,32 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods"):
 
         nodeData.append(nodeDict)
 
+    xfmrExist = False
+    xfmrData = []
+    for n, data in graph.nodes(data=True):
+        xfmrDict = {}
+        if data['nodeType'] != 'transformer':
+            continue
+        xfmrExist = True
+        xfmrDict = {'name': n, 'phase': data['phase'], 'pctR': data['pctR'], 'pctX': data['pctX'],
+                    'tap': data['tapSetting'], 'rating': data['rating'], 'nomPrimaryV': data['nomPrimaryV'],
+                    'nomSecondaryV1': data['nomSecondaryV1'], 'nomSecondaryV2': data['nomSecondaryV2']}
+
+        xfmrData.append(xfmrDict)
+
     edgeData = sorted(edgeData[:], key=lambda k: k['Ifloat'].real, reverse=True)
     nodeData = sorted(nodeData[:], key=lambda k: k['pctVdropFloat'].real, reverse=True)
+    xfmrData = sorted(xfmrData[:], key=lambda k: k['rating'], reverse=True)
+
+    outPutPathPlot = outPutPath+'/{0}_Plot_{1}.png'.format(graph.name, datetime.now().strftime("%Y-%m-%d"))
+    if plotting:
+        plt.draw_graph(graph, outPutPathPlot, fontSize=pltFontSize)
 
     if outPutPath == None:
         raise Exception("OutPutPath not set")
-        outPutPath = outPutPath+'/{0}_Report_{1}.odt'.format(graph.name, datetime.now().strftime("%Y-%m-%d"))
-    outPutPath = outPutPath+'/{0}_Report_{1}.odt'.format(graph.name, datetime.now().strftime("%Y-%m-%d"))
+    outPutPathReport = outPutPath+'/{0}_Report_{1}.odt'.format(graph.name, datetime.now().strftime("%Y-%m-%d"))
 
-    renderer = Renderer(currentdir+'/'+templateName, locals(), outPutPath)
+    print outPutPathPlot
+
+    renderer = Renderer(currentdir+'/'+templateName, locals(), outPutPathReport)
     renderer.run()

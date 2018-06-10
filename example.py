@@ -27,11 +27,14 @@ import matplotlib.pyplot as plt
 - If the program is not working, and messages are not desribing the problem clearly, check inputs to make source
   there are no isolated nodes.
 - Must instantiate a RadialPowerSystem object, then enter nodes and edges between the nodes for the program to function.
+- Transformer tap settings are entered as float representations of percentages: 5% FCBN entered as -5.0, 5% FCAN entered as 5.0.
+- Transformer ratings are entered in KVA.
+- Transformer pctX and pctR are entered as float representations of percentages: 5% X entered as 5.0, 5% R entered as 5.0.
 """
 
 G = RadialPowerSystem("Service #1")
 
-G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0, xRRatio=10.0)
+G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0, xRRatio=1.0)
 G.add_node("DS5", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
 G.add_connection("service_xfmr", "DS5", wireSize="1/0", conduitMat="PVC", length=25.0)
 
@@ -96,10 +99,10 @@ G.add_connection("DS3_B", "XFMR4", wireSize="1/0", conduitMat="steel", length=5.
 G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 
 
-# G1 = RadialPowerSystem("Service #2")
-# G1.add_node("1", nodeType="service", nomVLL=480, phase=1, sscXfmrSec=75000.0)
-# G1.add_node("2", nomVLL=480, phase=1, w=2000.0, vAr=0.0, nodeType="load")
-# G1.add_connection("1", "2", wireSize="1/0", conduitMat="PVC", length=1400.0, numWires=5)
+G1 = RadialPowerSystem("Service #2")
+G1.add_node("1", nodeType="service", nomVLL=480, phase=1, sscXfmrSec=75000.0)
+G1.add_node("2", nomVLL=480, phase=1, w=10000.0, vAr=0.0, nodeType="load")
+G1.add_connection("1", "2", wireSize="6", conduitMat="PVC", length=1400.0, numWires=1)
 
 
 #########################################################################################
@@ -117,7 +120,7 @@ if __name__ == "__main__":
     calc_sym_ssc(graphToCheck)
     # print graphToCheck.edges(data=True)
     # print graphToCheck.nodes(data=True)
-    if plot:
-        draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
+    # if plot:
+    #     draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
     if report:
-        create_report(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop')
+        create_report(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', plotting=True)
