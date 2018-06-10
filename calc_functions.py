@@ -236,8 +236,9 @@ def calc_sym_ssc(graph, xRRatio=10.0):
     """Calculates the maximum symmetrical short circuit current at each node on the network using a point-to-point calculation procedure,
     starting from the "service" node then running down the digraph edges out to the load nodes. The series impedance from the
     "service" node to each other node on the network is used to calculate the short circuit current available. Determines and sets
-    single phase line to line faults for single phase nodes.Requires that the short circuit current avaliable is provided
-    for the secondary terminals of the service transformer and that the service is single phase or split phase center tapped.
+    line to line faults and line to ground faults for single phase nodes. Requires that the short circuit current avaliable is provided
+    for the secondary terminals of the service transformer and that the service is single phase or split phase center tapped. The utility
+    X/R can be input (on secondary of service transformer), or a default of 10 is used.
     """
     wBase, vArBase = WBASE, VARBASE
     sBase = complex(wBase, vArBase * -1.0)
@@ -263,7 +264,7 @@ def calc_sym_ssc(graph, xRRatio=10.0):
 
     except KeyError:
         print ("""Missing input data for service node. Unable to perform short circuit current calculations.
-                  Avaliable short circuit current on secondary of service transformer.""")
+                  Avaliable short circuit current on secondary of service transformer is required.""")
 
     for i in graph.nodes():
         #Move on from service node
@@ -329,11 +330,3 @@ def calc_sym_ssc(graph, xRRatio=10.0):
                 print "Missing series per unit impedance for node {0}".format(i)
 
         #TODO: Implement SSC for three phase systems
-        # if graph.node[i]["phase"] == 3:
-        #     try:
-        #         if graph.node[i]["nodeType"] == "transformer":
-        #             graph.node[i]["SymSSC"] = (3*graph.node[i]["nomPrimaryV"]**2/math.sqrt(3) / -graph.node[i]["zSeriesPU"]) / sBase #TODO: Fix voltage determination for LN
-        #         else:
-        #             graph.node[i]["SymSSC"] = (3*graph.node[i]["nomVoltage"]**2/math.sqrt(3) / -graph.node[i]["zSeriesPU"]) / sBase #TODO: Fix voltage determination for LN
-        #     except KeyError:
-        #         print "Missing series per unit impedance for node {0}".format(i)

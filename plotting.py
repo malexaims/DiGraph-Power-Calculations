@@ -32,9 +32,7 @@ def draw_graph(graph, outPutPath=None, fontSize=10):
                               math.sqrt(graph[edge[0]][edge[1]]["I"].real**2 + graph[edge[0]][edge[1]]["I"].imag**2),
                               graph[edge[0]][edge[1]]["length"],
                               graph[edge[0]][edge[1]]["wireSize"])
-        # edge.attr['label'] = '{0:.2f}A \\n {1}ft'.format(
-        #                       graph[edge[0]][edge[1]]["I"].real,
-        #                       graph[edge[0]][edge[1]]["length"])
+
     for n in aGraph.nodes():
         i = aGraph.get_node(n)
         label = n

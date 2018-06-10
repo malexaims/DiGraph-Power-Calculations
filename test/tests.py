@@ -92,5 +92,112 @@ class SystemCalcsTestCase(unittest.TestCase):
         self.assertGreater(G.node["1"]["SSC_LN"].real, G.node["2"]["SSC_LN"].real)
 
 
+#TODO: Test that the ssc on secondary of XFMR is always less than the base turns ratio
+
+class TransformerTestCase(unittest.TestCase):
+
+    def test_transformer_vdrop_single_phase_resistance(self):
+        G = RadialPowerSystem("1")
+        digraph = nx.DiGraph()
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("2", phase=1, pctR=5.0, pctX=0.0, tapSetting=0.0, rating=10.0,
+                         nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+                         nodeType="transformer")
+        G.add_node("3", nomVLL=240, nomVLN=120, phase=1, w=10000.0, vAr=1000.0, nodeType="load")
+        G.add_connection("1", "2", wireSize="400", conduitMat="PVC", length=100.0)
+        G.add_connection("2", "3", wireSize="400", conduitMat="PVC", length=100.0)
+        turnsRatio = G.node["2"]["nomPrimaryV"] / G.node["2"]["nomSecondaryV2"]
+        calc_functions.per_unit_conv(G)
+        calc_functions.calc_flows_PU(G)
+        calc_functions.calc_voltages_PU(G)
+        calc_functions.actual_conv(G)
+        self.assertGreater(G.node["2"]["primaryVoltage"].real, G.node["2"]["secondaryVoltage2"].real * turnsRatio)
+
+
+    def test_transformer_vdrop_single_phase_reactance(self):
+        G = RadialPowerSystem("1")
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("2", phase=1, pctR=0.0, pctX=5.0, tapSetting=0.0, rating=10.0,
+                         nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+                         nodeType="transformer")
+        G.add_node("3", nomVLL=240, nomVLN=120, phase=1, w=10000.0, vAr=1000.0, nodeType="load")
+        G.add_connection("1", "2", wireSize="400", conduitMat="PVC", length=100.0)
+        G.add_connection("2", "3", wireSize="400", conduitMat="PVC", length=100.0)
+        turnsRatio = G.node["2"]["nomPrimaryV"] / G.node["2"]["nomSecondaryV2"]
+        calc_functions.per_unit_conv(G)
+        calc_functions.calc_flows_PU(G)
+        calc_functions.calc_voltages_PU(G)
+        calc_functions.actual_conv(G)
+        self.assertGreater(G.node["2"]["primaryVoltage"].real, G.node["2"]["secondaryVoltage2"].real * turnsRatio)
+
+
+    def test_transformer_vdrop_single_phase_impedance(self):
+        G = RadialPowerSystem("1")
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("2", phase=1, pctR=0.0, pctX=5.0, tapSetting=0.0, rating=10.0,
+                         nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+                         nodeType="transformer")
+        G.add_node("3", nomVLL=240, nomVLN=120, phase=1, w=10000.0, vAr=1000.0, nodeType="load")
+        G.add_connection("1", "2", wireSize="400", conduitMat="PVC", length=100.0)
+        G.add_connection("2", "3", wireSize="400", conduitMat="PVC", length=100.0)
+        turnsRatio = G.node["2"]["nomPrimaryV"] / G.node["2"]["nomSecondaryV2"]
+        calc_functions.per_unit_conv(G)
+        calc_functions.calc_flows_PU(G)
+        calc_functions.calc_voltages_PU(G)
+        calc_functions.actual_conv(G)
+        self.assertGreater(G.node["2"]["primaryVoltage"].real, G.node["2"]["secondaryVoltage2"].real * turnsRatio)
+
+
+    def test_transformer_ssc_single_phase_impedance(self):
+        G = RadialPowerSystem("1")
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("2", phase=1, pctR=1.0, pctX=1.0, tapSetting=0.0, rating=10.0,
+                         nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+                         nodeType="transformer")
+        G.add_node("3", nomVLL=240, nomVLN=120, phase=1, w=10000.0, vAr=1000.0, nodeType="load")
+        G.add_connection("1", "2", wireSize="400", conduitMat="PVC", length=100.0)
+        G.add_connection("2", "3", wireSize="400", conduitMat="PVC", length=0.00001)
+        turnsRatio = G.node["2"]["nomPrimaryV"] / G.node["2"]["nomSecondaryV2"]
+        calc_functions.per_unit_conv(G)
+        calc_functions.calc_sym_ssc(G)
+        self.assertGreater(G.node["2"]["SSC_LL"].real * turnsRatio, G.node["3"]["SSC_LL"].real)
+
+
+    def test_transformer_FCBN_tap_single_phase_impedance(self):
+        G = RadialPowerSystem("1")
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("2", phase=1, pctR=1.0, pctX=1.0, tapSetting=-5.0, rating=10.0,
+                         nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+                         nodeType="transformer")
+        G.add_node("3", nomVLL=240, nomVLN=120, phase=1, w=10000.0, vAr=1000.0, nodeType="load")
+        G.add_connection("1", "2", wireSize="400", conduitMat="PVC", length=100.0)
+        G.add_connection("2", "3", wireSize="400", conduitMat="PVC", length=0.00001)
+        calc_functions.per_unit_conv(G)
+        calc_functions.calc_flows_PU(G)
+        calc_functions.calc_voltages_PU(G)
+        calc_functions.actual_conv(G)
+        turnsRatio = ((G.node["2"]["nomPrimaryV"] - (G.node["2"]["nomPrimaryV"].real * G.node["2"]["tapSetting"]/100.0))
+                        / G.node["2"]["nomSecondaryV2"])
+        self.assertLess(G.node["2"]["primaryVoltage"].real, G.node["2"]["secondaryVoltage2"].real * turnsRatio)
+
+    def test_transformer_FCAN_tap_single_phase_impedance(self):
+        G = RadialPowerSystem("1")
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("2", phase=1, pctR=1.0, pctX=1.0, tapSetting=5.0, rating=10.0,
+                         nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
+                         nodeType="transformer")
+        G.add_node("3", nomVLL=240, nomVLN=120, phase=1, w=10000.0, vAr=1000.0, nodeType="load")
+        G.add_connection("1", "2", wireSize="400", conduitMat="PVC", length=100.0)
+        G.add_connection("2", "3", wireSize="400", conduitMat="PVC", length=0.00001)
+        calc_functions.per_unit_conv(G)
+        calc_functions.calc_flows_PU(G)
+        calc_functions.calc_voltages_PU(G)
+        calc_functions.actual_conv(G)
+        turnsRatio = ((G.node["2"]["nomPrimaryV"] - (G.node["2"]["nomPrimaryV"].real * G.node["2"]["tapSetting"]/100.0))
+                        / G.node["2"]["nomSecondaryV2"])
+        self.assertGreater(G.node["2"]["primaryVoltage"].real, G.node["2"]["secondaryVoltage2"].real * turnsRatio)
+
+
+
 if __name__ == '__main__':
     unittest.main()
