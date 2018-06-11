@@ -96,7 +96,7 @@ def neg_vAr_check(calc_flows_function):
     is not written to handle these type of loads currently.
     """
     def neg_vAr_check_wrapper(graph, **kwargs):
-        for i, data in graph.node(data=True):
+        for i, data in graph.nodes(data=True):
             try:
                 if data['vAr'] < 0:
                     raise ValueError("Negative vAr input for node {0}. Program cannot currently handle leading power factors.".format(i))

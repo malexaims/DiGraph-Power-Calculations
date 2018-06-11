@@ -123,4 +123,4 @@ if __name__ == "__main__":
     # if plot:
     #     draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
     if report:
-        create_report(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', plotting=True)
+        create_report(graphToCheck, outPutPath='C:\Users\Alex\Desktop', plotting=True)
