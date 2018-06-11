@@ -13,7 +13,7 @@ import plotting as plt
 
 
 
-def create_report(graph, outPutPath=None, templateName="reportTemplate.ods", plotting=False, pltFontSize=15):
+def create_report(graph, outPutPath=None, templateName="reportTemplate.ott", plotting=False, pltFontSize=15):
 
     systemName = graph.name
     dateTime = '{}'.format(datetime.now())
@@ -24,7 +24,8 @@ def create_report(graph, outPutPath=None, templateName="reportTemplate.ods", plo
         I = '{0:.1f}'.format(math.sqrt(data['I'].real**2+data["I"].imag**2))
 
         edgeDict = {'from':beg, 'to':end, 'length':data['length'], 'I':I, 'vDrop':vDrop,
-                    'wireSize':data['wireSize'], 'numWires':data['numWires'], 'Ifloat': data['I']}
+                    'wireSize':data['wireSize'], 'numWires':data['numWires'], 'Ifloat': data['I'],
+                    'wireMat':data['wireMat'], 'conduitMat':data['conduitMat']}
 
         edgeData.append(edgeDict)
 
