@@ -252,8 +252,8 @@ def calc_sym_ssc(graph, xRRatio=10.0):
     try:
         serviceVoltage = get_node_voltage(graph, serviceNode)
         zBase = (serviceVoltage**2.0) / sBase
-        zPULL = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]) / abs(zBase)
-        zPULN = (serviceVoltage / graph.node[serviceNode]["sscXfmrSec"]*1.5) / abs(zBase) #TODO: Find better way... this is rough assumption
+        zPULL = (serviceVoltage / graph.node[serviceNode]['availSSC']) / abs(zBase)
+        zPULN = (serviceVoltage / graph.node[serviceNode]['availSSC']*1.5) / abs(zBase) #TODO: Find better way... this is rough assumption
 
         sourceXPULL = math.sin(math.atan(xRRatio)) * zPULL
         sourceXPULN = math.sin(math.atan(xRRatio)) * zPULN
@@ -264,7 +264,7 @@ def calc_sym_ssc(graph, xRRatio=10.0):
 
     except KeyError:
         print ("""Missing input data for service node. Unable to perform short circuit current calculations.
-                  Avaliable short circuit current on secondary of service transformer is required.""")
+                  Avaliable short circuit current at service node is required.""")
 
     for i in graph.nodes():
         #Move on from service node
@@ -306,10 +306,10 @@ def calc_sym_ssc(graph, xRRatio=10.0):
 
     for i in graph.nodes():
         if i == serviceNode:
-            graph.node[i]["SSC_LL"] = graph.node[i]['sscXfmrSec']
+            graph.node[i]["SSC_LL"] = graph.node[i]['availSSC']
             try:
                 if graph.node[serviceNode]["phase"] == 1 and graph.node[serviceNode]["nomVLL"]*0.5 == graph.node[serviceNode]["nomVLN"] :
-                    graph.node[i]["SSC_LN"] = graph.node[i]['sscXfmrSec'] * 1.5  #TODO: Find better way... this is rough assumption
+                    graph.node[i]["SSC_LN"] = graph.node[i]['availSSC'] * 1.5  #TODO: Find better way... this is rough assumption
             except KeyError:
                 pass
             continue

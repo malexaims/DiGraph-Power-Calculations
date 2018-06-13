@@ -34,9 +34,9 @@ import matplotlib.pyplot as plt
 
 G = RadialPowerSystem("Service #1")
 
-G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0, xRRatio=1.0)
+G.add_node("service_xfmr", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=75000, xRRatio=10.0)
 G.add_node("DS5", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
-G.add_connection("service_xfmr", "DS5", wireSize="1/0", conduitMat="PVC", length=25.0)
+G.add_connection("service_xfmr", "DS5", wireSize="1/0", conduitMat="PVC", length=35.0)
 
 
 G.add_node("PB1", phase=1, nodeType="bus", nomVLL=480, nomVLN=240)
@@ -120,7 +120,5 @@ if __name__ == "__main__":
     calc_sym_ssc(graphToCheck)
     # print graphToCheck.edges(data=True)
     # print graphToCheck.nodes(data=True)
-    # if plot:
-    #     draw_graph(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', fontSize=15)
     if report:
-        create_report(graphToCheck, outPutPath='C:\Users\Alex\Desktop', plotting=plot)
+        create_report(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', plotting=plot)

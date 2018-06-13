@@ -96,7 +96,6 @@ compatConduitMaterial = ['HDPE', 'PVC', "aluminum", "steel"]
 WBASE = 1.0
 VARBASE = 1.0
 
-
 """Example of how to access conductor data from DataFrame created above"""
 # wireSize = 4
 # print conductorDataCopper["xR PVC"].get(wireSize)

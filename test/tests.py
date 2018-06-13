@@ -71,7 +71,7 @@ class SystemCalcsTestCase(unittest.TestCase):
 
     def test_simple_example_voltage(self):
         G = RadialPowerSystem("1")
-        G.add_node("1", nodeType="service", nomVLL=480, phase=1, sscXfmrSec=75000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, phase=1, availSSC=75000.0)
         G.add_node("2", nomVLL=480, phase=1, w=2000.0, vAr=0.0, nodeType="load")
         G.add_connection("1", "2", wireSize="1/0", conduitMat="PVC", length=1400.0)
         calc_functions.per_unit_conv(G)
@@ -83,7 +83,7 @@ class SystemCalcsTestCase(unittest.TestCase):
 
     def test_simple_example_SSC(self):
         G = RadialPowerSystem("1")
-        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=75000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=75000.0)
         G.add_node("2", nomVLL=480, nomVLN=240, phase=1, w=2000.0, vAr=0.0, nodeType="load")
         G.add_connection("1", "2", wireSize="1/0", conduitMat="PVC", length=1400.0)
         calc_functions.per_unit_conv(G)
@@ -99,7 +99,7 @@ class TransformerTestCase(unittest.TestCase):
     def test_transformer_vdrop_single_phase_resistance(self):
         G = RadialPowerSystem("1")
         digraph = nx.DiGraph()
-        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=100000.0)
         G.add_node("2", phase=1, pctR=5.0, pctX=0.0, tapSetting=0.0, rating=10.0,
                          nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
                          nodeType="transformer")
@@ -116,7 +116,7 @@ class TransformerTestCase(unittest.TestCase):
 
     def test_transformer_vdrop_single_phase_reactance(self):
         G = RadialPowerSystem("1")
-        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=100000.0)
         G.add_node("2", phase=1, pctR=0.0, pctX=5.0, tapSetting=0.0, rating=10.0,
                          nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
                          nodeType="transformer")
@@ -133,7 +133,7 @@ class TransformerTestCase(unittest.TestCase):
 
     def test_transformer_vdrop_single_phase_impedance(self):
         G = RadialPowerSystem("1")
-        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=100000.0)
         G.add_node("2", phase=1, pctR=0.0, pctX=5.0, tapSetting=0.0, rating=10.0,
                          nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
                          nodeType="transformer")
@@ -150,7 +150,7 @@ class TransformerTestCase(unittest.TestCase):
 
     def test_transformer_ssc_single_phase_impedance(self):
         G = RadialPowerSystem("1")
-        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=100000.0)
         G.add_node("2", phase=1, pctR=1.0, pctX=1.0, tapSetting=0.0, rating=10.0,
                          nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
                          nodeType="transformer")
@@ -165,7 +165,7 @@ class TransformerTestCase(unittest.TestCase):
 
     def test_transformer_FCBN_tap_single_phase_impedance(self):
         G = RadialPowerSystem("1")
-        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=100000.0)
         G.add_node("2", phase=1, pctR=1.0, pctX=1.0, tapSetting=-5.0, rating=10.0,
                          nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
                          nodeType="transformer")
@@ -182,7 +182,7 @@ class TransformerTestCase(unittest.TestCase):
 
     def test_transformer_FCAN_tap_single_phase_impedance(self):
         G = RadialPowerSystem("1")
-        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, sscXfmrSec=100000.0)
+        G.add_node("1", nodeType="service", nomVLL=480, nomVLN=240, phase=1, availSSC=100000.0)
         G.add_node("2", phase=1, pctR=1.0, pctX=1.0, tapSetting=5.0, rating=10.0,
                          nomPrimaryV=480, nomSecondaryV1=120, nomSecondaryV2=240,
                          nodeType="transformer")
