@@ -100,9 +100,9 @@ G.add_connection("XFMR4", "TADMS_1", wireSize=6, conduitMat="PVC", length=15.0)
 
 
 G1 = RadialPowerSystem("Service #2")
-G1.add_node("1", nodeType="service", nomVLL=480, phase=1, sscXfmrSec=75000.0)
-G1.add_node("2", nomVLL=480, phase=1, w=10000.0, vAr=0.0, nodeType="load")
-G1.add_connection("1", "2", wireSize="6", conduitMat="PVC", length=1400.0, numWires=1)
+G1.add_node("1", nodeType="service", nomVLL=480, phase=1, availSSC=75000, xRRatio=10.0)
+# G1.add_node("2", nomVLL=480, phase=1, w=10000.0, vAr=0.0, nodeType="load")
+# G1.add_connection("1", "2", wireSize="6", conduitMat="PVC", length=1400.0, numWires=1)
 
 
 #########################################################################################
@@ -110,15 +110,17 @@ G1.add_connection("1", "2", wireSize="6", conduitMat="PVC", length=1400.0, numWi
 #########################################################################################
 
 plot = True
-report = True
-graphToCheck = G
+report = False
+
+# nx.write_gpickle(G, "C:/Users/AtotheM/Desktop/test.gpickle")
+# G2 = nx.read_gpickle("C:/Users/AtotheM/Desktop/test.gpickle")
+# graphToCheck = G2
+graphToCheck = G1
 if __name__ == "__main__":
-    per_unit_conv(graphToCheck)
-    calc_flows_PU(graphToCheck)
-    calc_voltages_PU(graphToCheck)
-    actual_conv(graphToCheck)
-    calc_sym_ssc(graphToCheck)
-    # print graphToCheck.edges(data=True)
-    # print graphToCheck.nodes(data=True)
+    run_calcs(graphToCheck)
     if report:
-        create_report(graphToCheck, outPutPath='C:\Users\AtotheM\Desktop', plotting=plot)
+        create_report(graphToCheck,
+                      outPutPath='C:\Users\AtotheM\Desktop',
+                      plotting=plot)
+    if plot:
+        draw_graph(graphToCheck, outPutPath='C:/Users/AtotheM/Desktop/123.png')

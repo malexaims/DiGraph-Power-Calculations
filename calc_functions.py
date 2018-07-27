@@ -330,3 +330,24 @@ def calc_sym_ssc(graph, xRRatio=10.0):
                 print "Missing series per unit impedance for node {0}".format(i)
 
         #TODO: Implement SSC for three phase systems
+
+
+def run_calcs(graph, perUnit=True, calcFlows=True, calcVolts=True,
+              convActual=True, calcSymSSC=True):
+    """Easy access to calculation functions"""
+    if perUnit:
+        per_unit_conv(graph)
+    if calcFlows:
+        calc_flows_PU(graph)
+    if calcVolts:
+        calc_voltages_PU(graph)
+    if convActual:
+        actual_conv(graph)
+    if calcSymSSC:
+        calc_sym_ssc(graph)
+
+        # per_unit_conv(graphToCheck)
+        # calc_flows_PU(graphToCheck)
+        # calc_voltages_PU(graphToCheck)
+        # actual_conv(graphToCheck)
+        # calc_sym_ssc(graphToCheck)
