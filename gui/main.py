@@ -1,4 +1,4 @@
-import os, platform, sys, inspect
+import os, platform, sys, inspect, re
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -6,13 +6,14 @@ parentdir = os.path.dirname(currentdir)
 sys.path.insert(0,parentdir)
 from calc_functions import *
 from checker_functions import over_voltage_check
-from plotting import *
+from plotting import draw_graph
 import networkx as nx
 from classes import RadialPowerSystem
 from report.reports import create_report
 import matplotlib.pyplot as plt
 dir_path = os.path.dirname(os.path.realpath(__file__))
 sys.path.insert(0, dir_path)
+import newsystemdlg
 
 __version__ = "1.0.0"
 
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow):
         self.image = QImage()
         self.dirty = False
         self.filename = None
+        self.imagefilename = None
         self.graph = None
 
         self.imageLabel = QLabel()
@@ -70,7 +72,7 @@ class MainWindow(QMainWindow):
         #Edit menu actions
         editAddBusAction = self.create_action("Add Bus", self.add_bus,
                 "Alt+B", "addbus", "Add bus node ")
-        editAddXfmrAction = self.create_action("Add Service", self.add_xfmr,
+        editAddXfmrAction = self.create_action("Add Transformer", self.add_xfmr,
                 "Alt+X", "addxfmr", "Add xfmr node")
         editAddLoadAction = self.create_action("Add Load", self.add_load,
                 "Alt+L", "addload", "Add load node")
@@ -83,8 +85,8 @@ class MainWindow(QMainWindow):
 
         #Help menu actions
         helpAboutAction = self.create_action("&About Image Changer",
-                self.helpAbout)
-        helpHelpAction = self.create_action("&Help", self.helpHelp,
+                self.help_about)
+        helpHelpAction = self.create_action("&Help", self.help_Help,
                 QKeySequence.HelpContents)
 
         #Create file menu and add actions
@@ -243,20 +245,18 @@ class MainWindow(QMainWindow):
     def file_new(self):
         if not self.okToContinue():
             return
-    # TODO: Create newsystemdlg module with NewSystemDlg class,
-    # must include system name as init variable and create a service node
         dialog = newsystemdlg.NewSystemDlg(self)
         if dialog.exec_():
             self.add_recent_file(self.filename)
-            self.image = QImage()
-            self.image = dialog.image()
-            #TODO: Create image when initalizing system, will be only service node
-            #at first. Store image path in dialog class so it can be accessed here
-            self.filename = None
-            self.dirty = True
+            name, props = dialog.get_service_properties()
+            self.graph = RadialPowerSystem(dialog.get_system_name()) #Create power system
+            self.graph.add_node(name, **props) #Add the service node
+            self.file_save_as() #Sets self.filename and self.imagefilename
+            image = draw_graph(self.graph, outPutPath=str(self.imagefilename))
+            self.image = QImage(self.imagefilename)
             self.show_image()
-            self.statusLabel.setText("New sysem created")
-            self.update_status("Created new power system")
+            self.statusLabel.setText("New system created.")
+            self.update_status("Created new power system.")
 
 
     def file_open(self):
@@ -314,7 +314,7 @@ class MainWindow(QMainWindow):
             self.file_save_as()
         else:
             try:
-                nx.write_gpickle(self.graph, self.fname)
+                nx.write_gpickle(self.graph, self.filename)
                 self.update_status("Saved as {}".format(self.filename))
                 self.dirty = False
             except Exception:
@@ -327,14 +327,18 @@ class MainWindow(QMainWindow):
         if self.filename is not None:
             fname = self.filename
         else:
-            self.update_status("Failed to save as")
+            fname = ".gpickle"
         fname = unicode(QFileDialog.getSaveFileName(self,
                         "DiGraph Power Calcs - Save System",
                         fname, "Graph files (.gpickle)"))
-        fname += ".gpickle"
-        self.add_recent_file(fname)
-        self.filename = filename
-        self.file_save()
+        if fname:
+            if "." not in fname:
+                fname += ".gpickle"
+            imagefilename = fname
+            self.imagefilename = re.sub("\.gpickle$", ".png", imagefilename)
+            self.add_recent_file(fname)
+            self.filename = fname
+            self.file_save()
 
 
     def file_print(self):
@@ -419,7 +423,13 @@ class MainWindow(QMainWindow):
             self.update_status("Made report {}".format(outPutPath))
 
 
-    def helpAbout(self):
+    def show_image(self, parent=None):
+        if self.image.isNull():
+            return
+        self.imageLabel.setPixmap(QPixmap.fromImage(self.image))
+
+
+    def help_about(self):
         QMessageBox.about(self, "About DiGraph Power Calculations",
                 """<b>DiGraph Power Calculations</b> v {}
                 <p>This application can be used to perform
@@ -429,7 +439,7 @@ class MainWindow(QMainWindow):
                 QT_VERSION_STR, PYQT_VERSION_STR, platform.system()))
 
 
-    def helpHelp(self):
+    def help_Help(self):
         form = helpform.HelpForm("index.html", self) #TODO: Edit help html form
         form.show()
 
